@@ -18,10 +18,47 @@ document.addEventListener('DOMContentLoaded', () => {
         style: 'bar', autoClose: true, keepResult: true,
     });
     map.addControl(searchControl);
-    // Move the search control into the new container
-    const searchContainer = document.getElementById('search-container');
+
+    // Move the search control into the new container, and then add our button
     const searchControlContainer = searchControl.getContainer();
-    searchContainer.appendChild(searchControlContainer);
+    const geolocateButton = document.createElement('button');
+    geolocateButton.className = 'geolocate-button';
+    geolocateButton.title = 'Center on me';
+    searchControlContainer.insertBefore(geolocateButton, searchControlContainer.firstChild);
+
+    geolocateButton.addEventListener('click', () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const { latitude, longitude } = position.coords;
+                map.setView([latitude, longitude], 13);
+
+                // Autofill address
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+                    const data = await response.json();
+                    if (data.display_name) {
+                        const searchInput = document.querySelector('.leaflet-control-geosearch input[type="text"]');
+                        if (searchInput) {
+                            searchInput.value = data.display_name;
+                            // Trigger an input event to make sure the geosearch library recognizes the change
+                            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            searchInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }
+                } catch (error) {
+                    console.error('Reverse geocoding failed:', error);
+                }
+            }, (error) => {
+                console.error('Error getting location:', error);
+                alert('Could not get your location. Please ensure you have granted permission.');
+            });
+        } else {
+            alert('Geolocation is not supported by this browser.');
+        }
+    });
+
+    const searchContainer = document.getElementById('search-container');
+    searchContainer.appendChild(searchControl.getContainer());
 
     // --- App State ---
     const leadMarkers = []; // Array to store all lead marker layers
@@ -279,21 +316,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error updating lead:', error);
-        }
-    });
-
-    const centerOnMeButton = document.getElementById('center-on-me');
-    centerOnMeButton.addEventListener('click', () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const { latitude, longitude } = position.coords;
-                map.setView([latitude, longitude], 13);
-            }, (error) => {
-                console.error('Error getting location:', error);
-                alert('Could not get your location. Please ensure you have granted permission.');
-            });
-        } else {
-            alert('Geolocation is not supported by this browser.');
         }
     });
 
