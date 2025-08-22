@@ -27,6 +27,24 @@
         .communication-buttons a:hover {
             background-color: #0056b3;
         }
+        .lead-actions {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+        .btn-delete-lead {
+            background-color: #dc3545;
+            color: white;
+            padding: 0.8rem 1.2rem;
+            border-radius: 5px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .btn-delete-lead:hover {
+            background-color: #c82333;
+        }
         .activity-log {
             margin-top: 2rem;
         }
@@ -85,6 +103,10 @@
             <div class="communication-buttons">
                 <a id="call-btn" href="#">Call</a>
                 <a id="text-btn" href="#">Text</a>
+            </div>
+
+            <div class="lead-actions">
+                <button id="delete-lead-btn" class="btn-delete-lead">Delete Lead</button>
             </div>
 
             <div class="activity-log">

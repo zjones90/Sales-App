@@ -1,4 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Toast Notification Function ---
+    const showToast = (message, type = 'success') => {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+
+        container.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 100);
+
+        // Animate out and remove
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                container.removeChild(toast);
+            }, 300);
+        }, 3000);
+    };
+
     const kanbanBoard = document.getElementById('kanban-board');
 
     // --- Drag and Drop Event Handlers ---
@@ -20,12 +49,26 @@ document.addEventListener('DOMContentLoaded', () => {
         card.draggable = true;
         card.dataset.leadId = lead.id;
 
+        const phoneHtml = lead.phone
+            ? `<a href="tel:${lead.phone}" class="lead-phone-link">${lead.phone}</a>`
+            : '<p>No phone</p>';
+
+        const lastNote = lead.notes && lead.notes.length > 0
+            ? `<p class="notes">"${lead.notes[lead.notes.length - 1]}"</p>`
+            : '';
+
         card.innerHTML = `
             <h4>${lead.name}</h4>
-            <p>${lead.phone}</p>
+            ${phoneHtml}
+            ${lastNote}
         `;
 
-        card.addEventListener('click', () => {
+        card.addEventListener('click', (e) => {
+            // Don't navigate if a link was clicked
+            if (e.target.tagName.toLowerCase() === 'a') {
+                e.stopPropagation();
+                return;
+            }
             window.location.href = `/leads/${lead.id}`;
         });
 
@@ -90,12 +133,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ status: newStatus }),
                     });
 
-                    if (!response.ok) {
-                        alert('Failed to update lead status.');
+                    if (response.ok) {
+                        showToast('Status updated!');
+                    } else {
+                        showToast('Failed to update lead status.', 'error');
+                        // Optional: Revert the card to its original column if the API call fails
                     }
                 } catch (error) {
                     console.error('Error updating lead status:', error);
-                    alert('An error occurred while updating the lead.');
+                    showToast('An error occurred while updating the lead.', 'error');
                 }
             });
 
@@ -136,14 +182,19 @@ style.innerHTML = `
     .lead-card h4 {
         margin: 0 0 0.5rem 0;
     }
-    .lead-card p {
+    .lead-card p, .lead-card a {
         margin: 0;
         font-size: 0.9rem;
         color: #555;
+        text-decoration: none;
+    }
+    .lead-card a:hover {
+        text-decoration: underline;
     }
     .lead-card .notes {
         font-style: italic;
         color: #777;
+        margin-top: 0.5rem;
     }
     .lead-card.dragging {
         opacity: 0.5;

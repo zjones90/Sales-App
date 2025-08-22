@@ -78,6 +78,11 @@
             background-color: #ccc;
             margin-left: 10px;
         }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            margin-right: auto; /* Pushes it to the left */
+        }
     </style>
 </head>
 <body>
@@ -150,6 +155,7 @@
                     <!-- Options will be generated dynamically by map.js -->
                 </select>
                 <div class="modal-actions">
+                    <button type="button" id="delete-lead-btn" class="btn-delete">Delete</button>
                     <button type="submit" class="btn-save">Save Changes</button>
                     <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
                 </div>

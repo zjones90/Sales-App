@@ -1,4 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Toast Notification Function ---
+    const showToast = (message, type = 'success') => {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+
+        container.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 100);
+
+        // Animate out and remove
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                container.removeChild(toast);
+            }, 300);
+        }, 3000);
+    };
+
     // --- Map Initialization ---
     const map = L.map('map').setView([39.8283, -98.5795], 4);
 
@@ -55,10 +84,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const { latitude, longitude } = position.coords;
                 map.setView([latitude, longitude], 13);
             }, () => {
-                alert('Could not get your location.');
+                showToast('Could not get your location.', 'error');
             });
         } else {
-            alert('Geolocation is not supported by this browser.');
+            showToast('Geolocation is not supported by this browser.', 'error');
         }
     });
 
@@ -280,11 +309,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 closeAddModal();
                 await loadLeads();
+                showToast('Lead created successfully!');
             } else {
-                alert('Failed to create lead.');
+                showToast('Failed to create lead.', 'error');
             }
         } catch (error) {
             console.error('Error creating lead:', error);
+            showToast('An error occurred while creating the lead.', 'error');
         }
     });
 
@@ -292,16 +323,39 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const leadId = leadIdInput.value;
         const lead = allLeads[leadId];
+
+        // Start with the basic data
         const updatedData = {
             name: nameInput.value,
             phone: phoneInput.value,
-            address: {
-                ...lead.address, // Preserve original lat/lng
-                full_address: editAddressInput.value
-            },
             notes: notesInput.value.split('\n').filter(n => n.trim() !== ''),
             status: statusInput.value,
+            address: { ...lead.address } // Copy existing address object
         };
+
+        const newAddress = editAddressInput.value;
+        // Check if the address has actually changed
+        if (newAddress && newAddress !== lead.address.full_address) {
+            updatedData.address.full_address = newAddress;
+            // Address has changed, so we need to re-geocode it
+            try {
+                const geoResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newAddress)}&limit=1`);
+                const geoData = await geoResponse.json();
+                if (geoData.length > 0) {
+                    updatedData.address.lat = parseFloat(geoData[0].lat);
+                    updatedData.address.lng = parseFloat(geoData[0].lon);
+                } else {
+                    console.warn("Could not geocode the new address. Marker position will not be updated.");
+                }
+            } catch (geoError) {
+                console.error("Error during geocoding:", geoError);
+                // Proceed without updating lat/lng if geocoding fails
+            }
+        } else {
+            // Address is unchanged, just update the text part
+            updatedData.address.full_address = newAddress;
+        }
+
 
         try {
             const response = await fetch(`/api/leads/${leadId}`, {
@@ -316,14 +370,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 const markerToUpdate = leadMarkers.find(m => m.leadData.id === leadId);
                 if (markerToUpdate) {
                     markerToUpdate.leadData = updatedLead;
+                    // Update popup content and marker position
                     markerToUpdate.setPopupContent(generatePopupContent(updatedLead));
+                    if (updatedLead.address.lat && updatedLead.address.lng) {
+                        markerToUpdate.setLatLng([updatedLead.address.lat, updatedLead.address.lng]);
+                    }
                 }
                 closeEditModal();
+                showToast('Lead updated successfully!');
             } else {
-                alert('Failed to update lead.');
+                showToast('Failed to update lead.', 'error');
             }
         } catch (error) {
             console.error('Error updating lead:', error);
+            showToast('An error occurred while updating the lead.', 'error');
+        }
+    });
+
+    document.getElementById('delete-lead-btn').addEventListener('click', async () => {
+        const leadId = leadIdInput.value;
+        if (!leadId) return;
+
+        if (confirm('Are you sure you want to delete this lead? This action cannot be undone.')) {
+            try {
+                const response = await fetch(`/api/leads/${leadId}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    // Remove from map
+                    const markerToRemove = leadMarkers.find(m => m.leadData.id === leadId);
+                    if (markerToRemove) {
+                        map.removeLayer(markerToRemove);
+                    }
+                    // Remove from local data stores
+                    const index = leadMarkers.findIndex(m => m.leadData.id === leadId);
+                    if (index > -1) {
+                        leadMarkers.splice(index, 1);
+                    }
+                    delete allLeads[leadId];
+
+                    closeEditModal();
+                    showToast('Lead deleted successfully.');
+                } else {
+                    showToast('Failed to delete lead.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting lead:', error);
+                showToast('An error occurred while deleting the lead.', 'error');
+            }
         }
     });
 
