@@ -27,59 +27,6 @@
         #filter-container .filter-option {
             display: block;
         }
-        /* Modal Styles */
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-        }
-        .modal-content h3 {
-            margin-top: 0;
-        }
-        .modal-content label {
-            display: block;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        .modal-content input, .modal-content textarea {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-        .modal-actions {
-            margin-top: 20px;
-            text-align: right;
-        }
-        .modal-actions button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn-save {
-            background-color: #28a745;
-            color: white;
-        }
-        .btn-cancel {
-            background-color: #ccc;
-            margin-left: 10px;
-        }
     </style>
 </head>
 <body>
@@ -102,26 +49,6 @@
             <div class="filter-option"><label><input type="checkbox" name="status" value="Lost" checked> Lost</label></div>
         </div>
     </main>
-
-    <!-- Edit Lead Modal -->
-    <div id="edit-modal" class="modal-backdrop" style="display:none;">
-        <div class="modal-content">
-            <h3>Edit Lead</h3>
-            <form id="edit-form">
-                <input type="hidden" id="edit-lead-id">
-                <label for="edit-name">Name:</label>
-                <input type="text" id="edit-name" required>
-                <label for="edit-phone">Phone:</label>
-                <input type="tel" id="edit-phone">
-                <label for="edit-notes">Notes:</label>
-                <textarea id="edit-notes" rows="4"></textarea>
-                <div class="modal-actions">
-                    <button type="submit" class="btn-save">Save Changes</button>
-                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"

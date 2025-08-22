@@ -78,9 +78,21 @@
     </header>
     <main>
         <div id="lead-detail-container" class="lead-detail-container">
-            <h2 id="lead-name"></h2>
-            <p><strong>Status:</strong> <span id="lead-status"></span></p>
-            <p><strong>Phone:</strong> <span id="lead-phone"></span></p>
+            <form id="lead-form">
+                <h2 id="lead-name-header"></h2>
+                <input type="text" id="lead-name" readonly class="editable-field">
+
+                <p><strong>Status:</strong> <span id="lead-status"></span></p>
+
+                <label for="lead-phone"><strong>Phone:</strong></label>
+                <input type="tel" id="lead-phone" readonly class="editable-field">
+
+                <div class="form-actions">
+                    <button type="button" id="edit-btn">Edit</button>
+                    <button type="submit" id="save-btn" style="display:none;">Save</button>
+                </div>
+            </form>
+
             <div class="communication-buttons">
                 <a id="call-btn" href="#">Call</a>
                 <a id="text-btn" href="#">Text</a>
