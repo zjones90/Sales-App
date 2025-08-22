@@ -1,28 +1,4 @@
 {
-    "2": {
-        "id": "2",
-        "name": "Test Lead for Filtering",
-        "address": {
-            "lat": 39.027718840211605,
-            "lng": -118.30078125000001,
-            "full_address": "Placeholder address"
-        },
-        "phone": "555-1234",
-        "notes": [],
-        "status": "New"
-    },
-    "3": {
-        "id": "3",
-        "name": "Edited Test Lead",
-        "address": {
-            "lat": 39.027718840211605,
-            "lng": -118.30078125000001,
-            "full_address": "Placeholder address"
-        },
-        "phone": "555-1234",
-        "notes": [],
-        "status": "New"
-    },
     "4": {
         "id": "4",
         "name": "Test Lead Full Flow",
@@ -49,25 +25,13 @@
     },
     "6": {
         "id": "6",
-        "name": "Dropdown Test Lead",
+        "name": "Test",
         "address": {
-            "lat": 42.35854391749705,
-            "lng": -127.08984375000001,
-            "full_address": "Could not find address."
+            "lat": 32.93937214206347,
+            "lng": -97.08800554275514,
+            "full_address": "300, Springbrook Court, Grapevine, Tarrant County, Texas, 76051, United States"
         },
-        "phone": "",
-        "notes": [],
-        "status": "New"
-    },
-    "7": {
-        "id": "7",
-        "name": "Dropdown Test Lead",
-        "address": {
-            "lat": 42.35854391749705,
-            "lng": -127.08984375000001,
-            "full_address": "Could not find address."
-        },
-        "phone": "",
+        "phone": "2148016891",
         "notes": [],
         "status": "New"
     }
