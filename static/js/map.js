@@ -12,53 +12,55 @@ document.addEventListener('DOMContentLoaded', () => {
     streetMap.addTo(map);
     L.control.layers({ "Street View": streetMap, "Satellite View": satelliteMap }).addTo(map);
 
-    // --- Address Search Control ---
-    const searchControl = new GeoSearch.GeoSearchControl({
-        provider: new GeoSearch.OpenStreetMapProvider(),
-        style: 'bar', autoClose: true, keepResult: true,
+
+    // --- Custom Search ---
+    const searchIcon = document.getElementById('search-icon');
+    const searchInput = document.getElementById('search-input');
+    const searchSuggestions = document.getElementById('search-suggestions');
+
+    searchIcon.addEventListener('click', () => {
+        searchInput.style.display = 'block';
+        searchInput.focus();
+        searchIcon.style.display = 'none';
     });
-    map.addControl(searchControl);
 
-    // Move the search control into the new container, and then add our button
-    const searchControlContainer = searchControl.getContainer();
-    const geolocateButton = document.createElement('button');
-    geolocateButton.className = 'geolocate-button';
-    geolocateButton.title = 'Center on me';
-    searchControlContainer.insertBefore(geolocateButton, searchControlContainer.firstChild);
+    searchInput.addEventListener('input', async () => {
+        const query = searchInput.value;
+        if (query.length < 3) {
+            searchSuggestions.innerHTML = '';
+            return;
+        }
 
-    geolocateButton.addEventListener('click', () => {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+        const data = await response.json();
+
+        searchSuggestions.innerHTML = '';
+        data.forEach(item => {
+            const div = document.createElement('div');
+            div.textContent = item.display_name;
+            div.addEventListener('click', () => {
+                map.setView([item.lat, item.lon], 13);
+                searchInput.value = item.display_name;
+                searchSuggestions.innerHTML = '';
+            });
+            searchSuggestions.appendChild(div);
+        });
+    });
+
+    // --- Center Button ---
+    const centerButton = document.getElementById('center-button');
+    centerButton.addEventListener('click', () => {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async (position) => {
+            navigator.geolocation.getCurrentPosition((position) => {
                 const { latitude, longitude } = position.coords;
                 map.setView([latitude, longitude], 13);
-
-                // Autofill address
-                try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
-                    const data = await response.json();
-                    if (data.display_name) {
-                        const searchInput = document.querySelector('.leaflet-control-geosearch input[type="text"]');
-                        if (searchInput) {
-                            searchInput.value = data.display_name;
-                            // Trigger an input event to make sure the geosearch library recognizes the change
-                            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-                            searchInput.dispatchEvent(new Event('change', { bubbles: true }));
-                        }
-                    }
-                } catch (error) {
-                    console.error('Reverse geocoding failed:', error);
-                }
-            }, (error) => {
-                console.error('Error getting location:', error);
-                alert('Could not get your location. Please ensure you have granted permission.');
+            }, () => {
+                alert('Could not get your location.');
             });
         } else {
             alert('Geolocation is not supported by this browser.');
         }
     });
-
-    const searchContainer = document.getElementById('search-container');
-    searchContainer.appendChild(searchControl.getContainer());
 
     // --- App State ---
     const leadMarkers = []; // Array to store all lead marker layers
@@ -343,4 +345,5 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     initializeMap();
+
 });
