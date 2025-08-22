@@ -133,6 +133,34 @@ document.addEventListener('DOMContentLoaded', () => {
         editModal.style.display = 'none';
     };
 
+    addAddressInput.addEventListener('keyup', async (e) => {
+        const query = e.target.value;
+        if (query.length < 3) {
+            document.getElementById('address-suggestions').innerHTML = '';
+            return;
+        }
+
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+            const suggestions = await response.json();
+            const addressSuggestions = document.getElementById('address-suggestions');
+            addressSuggestions.innerHTML = '';
+            suggestions.forEach(place => {
+                const div = document.createElement('div');
+                div.textContent = place.display_name;
+                div.addEventListener('click', () => {
+                    addAddressInput.value = place.display_name;
+                    addLatInput.value = place.lat;
+                    addLngInput.value = place.lon;
+                    addressSuggestions.innerHTML = '';
+                });
+                addressSuggestions.appendChild(div);
+            });
+        } catch (error) {
+            console.error('Error fetching address suggestions:', error);
+        }
+    });
+
     // --- Event Listeners ---
     document.querySelectorAll('#filter-container input').forEach(cb => cb.addEventListener('change', updateMapFilters));
 
@@ -162,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             address: {
                 lat: parseFloat(addLatInput.value),
                 lng: parseFloat(addLngInput.value),
-                street: addAddressInput.value
+                full_address: addAddressInput.value
             }
         };
 
@@ -218,6 +246,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error updating lead:', error);
+        }
+    });
+
+    // Event listener for the "Center on Me" button
+    const centerOnMeButton = document.getElementById('center-on-me');
+    centerOnMeButton.addEventListener('click', () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const { latitude, longitude } = position.coords;
+                map.setView([latitude, longitude], 13); // Zoom in closer when centering
+            }, (error) => {
+                console.error('Error getting location:', error);
+                alert('Could not get your location. Please ensure you have granted permission.');
+            });
+        } else {
+            alert('Geolocation is not supported by this browser.');
         }
     });
 

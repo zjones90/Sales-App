@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const leadNameEl = document.getElementById('lead-name');
     const leadStatusEl = document.getElementById('lead-status');
     const leadPhoneEl = document.getElementById('lead-phone');
+    const leadAddressEl = document.getElementById('lead-address');
     const callBtn = document.getElementById('call-btn');
     const textBtn = document.getElementById('text-btn');
     const notesListEl = document.getElementById('notes-list');
@@ -30,6 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
         leadNameEl.textContent = currentLead.name;
         leadStatusEl.textContent = currentLead.status;
         leadPhoneEl.textContent = currentLead.phone;
+
+        if (currentLead.address && currentLead.address.full_address) {
+            leadAddressEl.textContent = currentLead.address.full_address;
+        } else {
+            leadAddressEl.textContent = 'No address provided.';
+        }
 
         // Set up communication links
         if (currentLead.phone) {
