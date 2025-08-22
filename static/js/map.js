@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: nameInput.value,
             phone: phoneInput.value,
             address: {
-                ...lead.address,
+                ...lead.address, // Preserve original lat/lng
                 full_address: editAddressInput.value
             },
             notes: notesInput.value.split('\n').filter(n => n.trim() !== ''),
