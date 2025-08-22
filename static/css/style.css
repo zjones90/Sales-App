@@ -132,77 +132,69 @@ main {
     border-radius: 8px;
 }
 
-#search-container {
+
+#custom-controls-container {
     position: absolute;
     top: 10px;
-    left: 50px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 1000;
-    /* The container itself doesn't need styling, the child will have it */
+    display: flex;
+    gap: 5px;
 }
 
-/* Style the geosearch control container */
-.leaflet-control-geosearch {
-    display: flex;
-    flex-direction: row-reverse; /* Puts the input before the button */
+#center-button, #search-icon {
+    width: 34px;
+    height: 34px;
+    background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
-    background-color: #fff;
-    overflow: hidden; /* Ensures the border-radius is respected by children */
-}
-
-/* Style the geolocate button created by map.js */
-.geolocate-button {
-    background-color: #fff;
-    border: none;
-    border-left: 1px solid #ccc; /* Separator line */
     cursor: pointer;
-    padding: 0 10px;
-    font-size: 1.2rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
 }
 
-.geolocate-button:hover {
-    background-color: #f4f4f4;
-}
-
-.geolocate-button::before {
-    content: '🎯'; /* Target icon */
-    color: #333;
-}
-
-/* Adjust the geosearch input field */
-.leaflet-control-geosearch .results {
-    border-top: 1px solid #ccc;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-}
-
-.leaflet-control-geosearch form {
-    margin: 0;
+#search-wrapper {
     display: flex;
 }
 
-.leaflet-control-geosearch input[type="text"] {
-    border: none;
+#search-input {
+    height: 34px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
     padding: 0 10px;
-    outline: none;
-    height: 36px; /* Match button height */
-    box-sizing: border-box;
+    font-size: 1rem;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
 }
 
-.leaflet-control-geosearch .reset {
-    display: none; /* Hiding the 'x' from the search bar for a cleaner look */
+#search-suggestions {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    z-index: 1001;
+}
+
+#search-suggestions div {
+    padding: 10px;
+    cursor: pointer;
+}
+
+#search-suggestions div:hover {
+    background-color: #f4f4f4;
 }
 
 /* Filter Control Styles */
 #filter-control-container {
     position: absolute;
-    top: 50px; /* Position below the search bar */
-    left: 10px;
+    top: 50px; /* Position below the layer control */
+    right: 10px;
     z-index: 800;
 }
 
