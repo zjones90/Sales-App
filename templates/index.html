@@ -21,6 +21,30 @@
         <div id="map"></div>
     </main>
 
+    <!-- Add Lead Modal -->
+    <div id="add-lead-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Create New Lead</h2>
+            <form id="add-lead-form">
+                <input type="hidden" id="lead-lat" name="lat">
+                <input type="hidden" id="lead-lng" name="lng">
+
+                <label for="lead-name-modal">Name:</label>
+                <input type="text" id="lead-name-modal" name="name" required>
+
+                <label for="lead-phone-modal">Phone:</label>
+                <input type="tel" id="lead-phone-modal" name="phone">
+
+                <label for="lead-address-modal">Address:</label>
+                <input type="text" id="lead-address-modal" name="address" required>
+                <div id="address-suggestions"></div>
+
+                <button type="submit">Create Lead</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
