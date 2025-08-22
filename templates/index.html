@@ -83,6 +83,24 @@
             color: white;
             margin-right: auto; /* Pushes it to the left */
         }
+        /* Floating Action Button */
+        .fab {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            border: none;
+            font-size: 30px;
+            line-height: 60px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 800;
+        }
     </style>
 </head>
 <body>
@@ -112,6 +130,7 @@
                 </div>
             </div>
         </div>
+        <button id="add-lead-fab" class="fab" title="Add New Lead">+</button>
     </main>
 
     <!-- Add Lead Modal -->
@@ -169,5 +188,12 @@
      crossorigin=""></script>
     <!-- App's Map JS -->
     <script src="/static/js/map.js"></script>
+    <script>
+        // Add event listener for the new FAB
+        document.getElementById('add-lead-fab').addEventListener('click', () => {
+            // Open the modal at the current center of the map
+            openAddModal(map.getCenter());
+        });
+    </script>
 </body>
 </html>

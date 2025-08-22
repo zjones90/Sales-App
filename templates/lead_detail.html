@@ -45,6 +45,36 @@
         .btn-delete-lead:hover {
             background-color: #c82333;
         }
+        /* Styles for the editable form */
+        .lead-form-group {
+            margin-bottom: 1rem;
+        }
+        .lead-form-group label {
+            display: block;
+            margin-bottom: .5rem;
+            font-weight: bold;
+        }
+        .lead-form-group input {
+            width: 100%;
+            padding: .5rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .btn-save-lead {
+            background-color: #28a745;
+            color: white;
+            padding: 0.8rem 1.2rem;
+            border-radius: 5px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 1rem;
+        }
+        .btn-save-lead:hover {
+            background-color: #218838;
+        }
         .activity-log {
             margin-top: 2rem;
         }
@@ -96,18 +126,34 @@
     </header>
     <main>
         <div id="lead-detail-container" class="lead-detail-container">
-            <h2 id="lead-name"></h2>
-            <p><strong>Status:</strong> <span id="lead-status"></span></p>
-            <p><strong>Phone:</strong> <span id="lead-phone"></span></p>
-            <p><strong>Address:</strong> <span id="lead-address"></span></p>
-            <div class="communication-buttons">
-                <a id="call-btn" href="#">Call</a>
-                <a id="text-btn" href="#">Text</a>
-            </div>
+            <form id="lead-form">
+                <div class="lead-form-group">
+                    <label for="lead-name">Name</label>
+                    <input type="text" id="lead-name" name="name">
+                </div>
+                 <div class="lead-form-group">
+                    <label for="lead-status">Status</label>
+                    <p><strong id="lead-status-text"></strong> (Change on Kanban board)</p>
+                </div>
+                <div class="lead-form-group">
+                    <label for="lead-phone">Phone</label>
+                    <input type="tel" id="lead-phone" name="phone">
+                </div>
+                <div class="lead-form-group">
+                    <label for="lead-address">Address</label>
+                    <input type="text" id="lead-address" name="address">
+                </div>
 
-            <div class="lead-actions">
-                <button id="delete-lead-btn" class="btn-delete-lead">Delete Lead</button>
-            </div>
+                <div class="communication-buttons">
+                    <a id="call-btn" href="#">Call</a>
+                    <a id="text-btn" href="#">Text</a>
+                </div>
+
+                <div class="lead-actions">
+                    <button type="submit" class="btn-save-lead">Save Changes</button>
+                    <button id="delete-lead-btn" class="btn-delete-lead" type="button">Delete Lead</button>
+                </div>
+            </form>
 
             <div class="activity-log">
                 <h3>Activity Log</h3>

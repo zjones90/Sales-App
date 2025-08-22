@@ -28,10 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     };
 
-    const leadNameEl = document.getElementById('lead-name');
-    const leadStatusEl = document.getElementById('lead-status');
-    const leadPhoneEl = document.getElementById('lead-phone');
-    const leadAddressEl = document.getElementById('lead-address');
+    const leadForm = document.getElementById('lead-form');
+    const leadNameInput = document.getElementById('lead-name');
+    const leadStatusText = document.getElementById('lead-status-text');
+    const leadPhoneInput = document.getElementById('lead-phone');
+    const leadAddressInput = document.getElementById('lead-address');
     const callBtn = document.getElementById('call-btn');
     const textBtn = document.getElementById('text-btn');
     const notesListEl = document.getElementById('notes-list');
@@ -57,20 +58,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderLeadData = () => {
         if (!currentLead) return;
 
-        leadNameEl.textContent = currentLead.name;
-        leadStatusEl.textContent = currentLead.status;
-        leadPhoneEl.textContent = currentLead.phone;
-
-        if (currentLead.address && currentLead.address.full_address) {
-            leadAddressEl.textContent = currentLead.address.full_address;
-        } else {
-            leadAddressEl.textContent = 'No address provided.';
-        }
+        leadNameInput.value = currentLead.name || '';
+        leadStatusText.textContent = currentLead.status || 'N/A';
+        leadPhoneInput.value = currentLead.phone || '';
+        leadAddressInput.value = currentLead.address?.full_address || '';
 
         // Set up communication links
         if (currentLead.phone) {
             callBtn.href = `tel:${currentLead.phone}`;
             textBtn.href = `sms:${currentLead.phone}`;
+            callBtn.style.display = 'inline-block';
+            textBtn.style.display = 'inline-block';
         } else {
             callBtn.style.display = 'none';
             textBtn.style.display = 'none';
@@ -115,7 +113,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const handleUpdateLead = async (e) => {
+        e.preventDefault();
+        const updatedData = {
+            name: leadNameInput.value,
+            phone: leadPhoneInput.value,
+            address: {
+                ...currentLead.address, // Preserve lat/lng
+                full_address: leadAddressInput.value
+            }
+        };
+
+        try {
+            const response = await fetch(`/api/leads/${LEAD_ID}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData),
+            });
+
+            if (response.ok) {
+                currentLead = await response.json();
+                renderLeadData();
+                showToast('Lead updated successfully!');
+            } else {
+                showToast('Failed to update lead.', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating lead:', error);
+            showToast('An error occurred while updating the lead.', 'error');
+        }
+    };
+
     addNoteForm.addEventListener('submit', handleAddNote);
+    leadForm.addEventListener('submit', handleUpdateLead);
 
     const handleDeleteLead = async () => {
         if (!currentLead) return;
