@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateMapFilters = () => {
-        const checkedStatuses = Array.from(document.querySelectorAll('#filter-container input:checked')).map(cb => cb.value);
+        const checkedStatuses = Array.from(document.querySelectorAll('#filter-options input:checked')).map(cb => cb.value);
         leadMarkers.forEach(marker => {
             if (checkedStatuses.includes(marker.leadData.status)) {
                 if (!map.hasLayer(marker)) marker.addTo(map);
@@ -133,11 +133,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const buildControlsFromStatuses = (statuses) => {
-        const filterContainer = document.getElementById('filter-container');
+        const filterOptionsContainer = document.getElementById('filter-options');
         const statusDropdown = document.getElementById('_status');
 
         // Clear any existing placeholders
-        filterContainer.innerHTML = '<h4>Filter by Status</h4>';
+        filterOptionsContainer.innerHTML = '';
         statusDropdown.innerHTML = '';
 
         statuses.forEach(status => {
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             label.appendChild(checkbox);
             label.appendChild(document.createTextNode(` ${status}`));
             optionDiv.appendChild(label);
-            filterContainer.appendChild(optionDiv);
+            filterOptionsContainer.appendChild(optionDiv);
 
             // Build edit modal dropdown options
             const dropdownOption = document.createElement('option');
@@ -237,6 +237,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Event Listeners ---
+    document.getElementById('filter-button').addEventListener('click', () => {
+        const filterPanel = document.getElementById('filter-panel');
+        const isHidden = filterPanel.style.display === 'none';
+        filterPanel.style.display = isHidden ? 'block' : 'none';
+    });
+
     document.addEventListener('click', function(e) {
         if (e.target && e.target.classList.contains('edit-lead-btn')) {
             const leadId = e.target.dataset.leadId;
@@ -331,7 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadLeads();
         } catch (error) {
             console.error('Error initializing map:', error);
-            document.getElementById('filter-container').innerHTML += '<p>Error loading filters.</p>';
+            // Can't build a button, so just show error text.
+            document.getElementById('filter-control-container').innerHTML = '<p>Error loading filters.</p>';
         }
     };
 
