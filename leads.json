@@ -11,5 +11,27 @@
             "This is a test note."
         ],
         "status": "New"
+    },
+    "2": {
+        "id": "2",
+        "name": "Test Lead for Filtering",
+        "address": {
+            "lat": 39.027718840211605,
+            "lng": -118.30078125000001
+        },
+        "phone": "555-1234",
+        "notes": [],
+        "status": "New"
+    },
+    "3": {
+        "id": "3",
+        "name": "Edited Test Lead",
+        "address": {
+            "lat": 39.027718840211605,
+            "lng": -118.30078125000001
+        },
+        "phone": "555-1234",
+        "notes": [],
+        "status": "New"
     }
 }
