@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
         style: 'bar', autoClose: true, keepResult: true,
     });
     map.addControl(searchControl);
+    // Move the search control into the new container
+    const searchContainer = document.getElementById('search-container');
+    const searchControlContainer = searchControl.getContainer();
+    searchContainer.appendChild(searchControlContainer);
 
     // --- App State ---
     const leadMarkers = []; // Array to store all lead marker layers

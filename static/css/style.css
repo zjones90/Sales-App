@@ -132,23 +132,42 @@ main {
     border-radius: 8px;
 }
 
-#center-on-me {
+#search-container {
     position: absolute;
-    top: 2rem;
-    right: 2rem;
-    z-index: 1000; /* Leaflet's default z-index for markers is around 400-600 */
-    padding: 10px;
+    top: 10px;
+    left: 50px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
     background-color: #fff;
-    border: 2px solid #007bff;
-    border-radius: 5px;
+    border-radius: 4px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+}
+#center-on-me {
+    background-color: #fff;
+    border: none;
+    border-right: 1px solid #ccc;
     cursor: pointer;
-    font-size: 1rem;
-    color: #007bff;
+    padding: 9px;
+    font-size: 1.2rem;
+    border-radius: 4px 0 0 4px;
 }
 
 #center-on-me:hover {
-    background-color: #007bff;
-    color: #fff;
+    background-color: #f4f4f4;
+}
+
+#center-on-me::before {
+    content: '🎯'; /* Target icon */
+    color: #333;
+}
+.leaflet-control-geosearch {
+    border-left: none !important;
+}
+
+.leaflet-control-geosearch, .leaflet-control-geosearch:hover {
+    border-color: transparent !important;
+    border-left: 1px solid #ccc !important;
 }
 
 /* Kanban Board Styles */
