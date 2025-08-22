@@ -1,6 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     const kanbanBoard = document.getElementById('kanban-board');
-    const columns = document.querySelectorAll('.kanban-column');
+
+    // --- Drag and Drop Event Handlers ---
+    function handleDragStart(e) {
+        e.dataTransfer.setData('text/plain', e.target.dataset.leadId);
+        setTimeout(() => {
+            e.target.classList.add('dragging');
+        }, 0);
+    }
+
+    function handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+    }
 
     // Function to create a lead card element
     const createLeadCard = (lead) => {
@@ -14,12 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <p>${lead.phone}</p>
         `;
 
-        // Make the card clickable to go to the detail page
         card.addEventListener('click', () => {
             window.location.href = `/leads/${lead.id}`;
         });
 
-        // Add drag start and end listeners to the card
         card.addEventListener('dragstart', handleDragStart);
         card.addEventListener('dragend', handleDragEnd);
 
@@ -44,60 +53,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Drag and Drop Event Handlers ---
+    // Function to build the Kanban board columns from a list of statuses
+    const buildKanbanBoard = (statuses) => {
+        statuses.forEach(status => {
+            const column = document.createElement('div');
+            column.className = 'kanban-column';
+            column.dataset.status = status;
 
-    function handleDragStart(e) {
-        e.dataTransfer.setData('text/plain', e.target.dataset.leadId);
-        setTimeout(() => {
-            e.target.classList.add('dragging');
-        }, 0);
-    }
+            const title = document.createElement('h3');
+            title.textContent = status;
+            column.appendChild(title);
 
-    function handleDragEnd(e) {
-        e.target.classList.remove('dragging');
-    }
-
-    columns.forEach(column => {
-        column.addEventListener('dragover', (e) => {
-            e.preventDefault(); // Allow drop
-            const draggingCard = document.querySelector('.dragging');
-            column.appendChild(draggingCard);
-        });
-
-        column.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            const leadId = e.dataTransfer.getData('text/plain');
-            const newStatus = column.dataset.status;
-            const draggedCard = document.querySelector(`[data-lead-id="${leadId}"]`);
-
-            // Optimistically move the card in the UI
-            column.appendChild(draggedCard);
-
-            // Update the lead status on the backend
-            try {
-                const response = await fetch(`/api/leads/${leadId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ status: newStatus }),
-                });
-
-                if (!response.ok) {
-                    // If the update fails, we should ideally move the card back.
-                    // For now, we'll just alert the user.
-                    alert('Failed to update lead status.');
-                    // A more robust solution would reload the board or move the card back to its original column.
+            // Add drag and drop listeners to the new column
+            column.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const draggingCard = document.querySelector('.dragging');
+                if (draggingCard) {
+                    column.appendChild(draggingCard);
                 }
-            } catch (error) {
-                console.error('Error updating lead status:', error);
-                alert('An error occurred while updating the lead.');
-            }
-        });
-    });
+            });
 
-    // Initial load of leads
-    loadLeads();
+            column.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                const leadId = e.dataTransfer.getData('text/plain');
+                const newStatus = column.dataset.status;
+                const draggedCard = document.querySelector(`[data-lead-id="${leadId}"]`);
+
+                if (draggedCard) {
+                    column.appendChild(draggedCard);
+                }
+
+                try {
+                    const response = await fetch(`/api/leads/${leadId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus }),
+                    });
+
+                    if (!response.ok) {
+                        alert('Failed to update lead status.');
+                    }
+                } catch (error) {
+                    console.error('Error updating lead status:', error);
+                    alert('An error occurred while updating the lead.');
+                }
+            });
+
+            kanbanBoard.appendChild(column);
+        });
+    };
+
+    // Main function to initialize the app
+    const initializeKanban = async () => {
+        try {
+            const response = await fetch('/api/statuses');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const statuses = await response.json();
+            buildKanbanBoard(statuses);
+            await loadLeads();
+        } catch (error) {
+            console.error('Error initializing Kanban board:', error);
+            kanbanBoard.innerHTML = '<p>Error loading board configuration. Could not fetch statuses.</p>';
+        }
+    };
+
+    initializeKanban();
 });
 
 // Add some specific styles for the cards

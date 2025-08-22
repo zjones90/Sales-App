@@ -91,6 +91,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const buildControlsFromStatuses = (statuses) => {
+        const filterContainer = document.getElementById('filter-container');
+        const statusDropdown = document.getElementById('edit-status');
+
+        // Clear any existing placeholders
+        filterContainer.innerHTML = '<h4>Filter by Status</h4>';
+        statusDropdown.innerHTML = '';
+
+        statuses.forEach(status => {
+            // Build filter checkboxes
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'filter-option';
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'status';
+            checkbox.value = status;
+            checkbox.checked = true;
+            checkbox.addEventListener('change', updateMapFilters);
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(` ${status}`));
+            optionDiv.appendChild(label);
+            filterContainer.appendChild(optionDiv);
+
+            // Build edit modal dropdown options
+            const dropdownOption = document.createElement('option');
+            dropdownOption.value = status;
+            dropdownOption.textContent = status;
+            statusDropdown.appendChild(dropdownOption);
+        });
+    };
+
     const openAddModal = async (latlng) => {
         addLatInput.value = latlng.lat;
         addLngInput.value = latlng.lng;
@@ -164,11 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Event Listeners ---
-    document.querySelectorAll('#filter-container input').forEach(cb => cb.addEventListener('change', updateMapFilters));
-
-    // Use event delegation on the document to handle clicks on dynamically created buttons
     document.addEventListener('click', function(e) {
-        // Check if the clicked element is an edit button
         if (e.target && e.target.classList.contains('edit-lead-btn')) {
             const leadId = e.target.dataset.leadId;
             openEditModal(leadId);
@@ -176,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     map.on('click', (e) => {
-        // Prevent creating new leads when clicking on a marker or control
         if (e.originalEvent.target.closest('.leaflet-marker-icon') || e.originalEvent.target.closest('.leaflet-control')) {
             return;
         }
@@ -251,13 +278,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Event listener for the "Center on Me" button
     const centerOnMeButton = document.getElementById('center-on-me');
     centerOnMeButton.addEventListener('click', () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
                 const { latitude, longitude } = position.coords;
-                map.setView([latitude, longitude], 13); // Zoom in closer when centering
+                map.setView([latitude, longitude], 13);
             }, (error) => {
                 console.error('Error getting location:', error);
                 alert('Could not get your location. Please ensure you have granted permission.');
@@ -267,6 +293,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Initial Load ---
-    loadLeads();
+    // --- Main App Initialization ---
+    const initializeMap = async () => {
+        try {
+            const response = await fetch('/api/statuses');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const statuses = await response.json();
+            buildControlsFromStatuses(statuses);
+            await loadLeads();
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            document.getElementById('filter-container').innerHTML += '<p>Error loading filters.</p>';
+        }
+    };
+
+    initializeMap();
 });

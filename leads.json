@@ -60,5 +60,29 @@
         "phone": "555-555-5555",
         "notes": [],
         "status": "Won"
+    },
+    "6": {
+        "id": "6",
+        "name": "Dropdown Test Lead",
+        "address": {
+            "lat": 42.35854391749705,
+            "lng": -127.08984375000001,
+            "full_address": "Could not find address."
+        },
+        "phone": "",
+        "notes": [],
+        "status": "New"
+    },
+    "7": {
+        "id": "7",
+        "name": "Dropdown Test Lead",
+        "address": {
+            "lat": 42.35854391749705,
+            "lng": -127.08984375000001,
+            "full_address": "Could not find address."
+        },
+        "phone": "",
+        "notes": [],
+        "status": "New"
     }
 }

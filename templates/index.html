@@ -95,12 +95,7 @@
         <button id="center-on-me">Center on Me</button>
         <div id="filter-container">
             <h4>Filter by Status</h4>
-            <div class="filter-option"><label><input type="checkbox" name="status" value="New" checked> New</label></div>
-            <div class="filter-option"><label><input type="checkbox" name="status" value="Contacted" checked> Contacted</label></div>
-            <div class="filter-option"><label><input type="checkbox" name="status" value="Site Visit Scheduled" checked> Site Visit Scheduled</label></div>
-            <div class="filter-option"><label><input type="checkbox" name="status" value="Quote Sent" checked> Quote Sent</label></div>
-            <div class="filter-option"><label><input type="checkbox" name="status" value="Won" checked> Won</label></div>
-            <div class="filter-option"><label><input type="checkbox" name="status" value="Lost" checked> Lost</label></div>
+            <!-- Filters will be generated dynamically by map.js -->
         </div>
     </main>
 
@@ -141,13 +136,8 @@
                 <label for="edit-notes">Notes:</label>
                 <textarea id="edit-notes" rows="4"></textarea>
                 <label for="edit-status">Status:</label>
-                <select id="edit-status">
-                    <option value="New">New</option>
-                    <option value="Contacted">Contacted</option>
-                    <option value="Site Visit Scheduled">Site Visit Scheduled</option>
-                    <option value="Quote Sent">Quote Sent</option>
-                    <option value="Won">Won</option>
-                    <option value="Lost">Lost</option>
+                <select id="_status">
+                    <!-- Options will be generated dynamically by map.js -->
                 </select>
                 <div class="modal-actions">
                     <button type="submit" class="btn-save">Save Changes</button>

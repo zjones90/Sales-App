@@ -7,6 +7,18 @@ app = Flask(__name__)
 # Path for our JSON data file
 LEADS_FILE = 'leads.json'
 
+# Define the canonical list of lead statuses
+LEAD_STATUSES = [
+    "New",
+    "Contacted",
+    "Measured",
+    "Presented",
+    "Signed",
+    "Dug",
+    "Completed",
+    "Lost"
+]
+
 # Helper function to read leads from the JSON file
 def get_leads():
     if not os.path.exists(LEADS_FILE):
@@ -24,6 +36,10 @@ def save_leads(leads):
         json.dump(leads, f, indent=4)
 
 # --- API Endpoints ---
+
+@app.route('/api/statuses', methods=['GET'])
+def api_get_statuses():
+    return jsonify(LEAD_STATUSES)
 
 @app.route('/api/leads', methods=['GET'])
 def api_get_leads():
