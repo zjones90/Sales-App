@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Map Initialization ---
     const map = L.map('map').setView([39.8283, -98.5795], 4);
+    let tempMarker = null; // To hold temporary markers
 
     // --- Tile Layers & Layer Control ---
     const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -41,11 +42,17 @@ document.addEventListener('DOMContentLoaded', () => {
     streetMap.addTo(map);
     L.control.layers({ "Street View": streetMap, "Satellite View": satelliteMap }).addTo(map);
 
-
     // --- Custom Search ---
     const searchIcon = document.getElementById('search-icon');
     const searchInput = document.getElementById('search-input');
     const searchSuggestions = document.getElementById('search-suggestions');
+
+    const placeTemporaryMarker = (lat, lon) => {
+        if (tempMarker) {
+            map.removeLayer(tempMarker);
+        }
+        tempMarker = L.marker([lat, lon]).addTo(map);
+    };
 
     searchIcon.addEventListener('click', () => {
         searchInput.style.display = 'block';
@@ -68,7 +75,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const div = document.createElement('div');
             div.textContent = item.display_name;
             div.addEventListener('click', () => {
-                map.setView([item.lat, item.lon], 13);
+                const lat = parseFloat(item.lat);
+                const lon = parseFloat(item.lon);
+                map.setView([lat, lon], 14); // Zoom in a bit closer
+                placeTemporaryMarker(lat, lon);
                 searchInput.value = item.display_name;
                 searchSuggestions.innerHTML = '';
             });
@@ -76,20 +86,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- Center Button ---
-    const centerButton = document.getElementById('center-button');
-    centerButton.addEventListener('click', () => {
+    const centerOnUser = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
                 const { latitude, longitude } = position.coords;
-                map.setView([latitude, longitude], 13);
+                map.setView([latitude, longitude], 14); // Zoom in a bit closer
+                placeTemporaryMarker(latitude, longitude);
             }, () => {
                 showToast('Could not get your location.', 'error');
             });
         } else {
             showToast('Geolocation is not supported by this browser.', 'error');
         }
-    });
+    };
+
+    // --- Center Button ---
+    const centerButton = document.getElementById('center-button');
+    centerButton.addEventListener('click', centerOnUser);
+
 
     // --- App State ---
     const leadMarkers = []; // Array to store all lead marker layers
@@ -119,8 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const addressStr = lead.address?.full_address || 'No address provided';
         return `<b>${lead.name || 'Unnamed Lead'}</b><br>
                 ${addressStr}<br>
-                ${lead.phone || ''}<br>
-                <button class="edit-lead-btn" data-lead-id="${lead.id}">Edit</button>`;
+                ${lead.phone || ''}`;
+        // The edit button is removed as per the requirement.
     };
 
     const addLeadMarker = (lead) => {
@@ -128,6 +142,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const marker = L.marker([lead.address.lat, lead.address.lng]);
             marker.bindPopup(generatePopupContent(lead));
             marker.leadData = lead; // Store full lead data on the marker
+
+            // Make the marker clickable to navigate to the lead detail page
+            marker.on('click', () => {
+                window.location.href = `/leads/${lead.id}`;
+            });
+
             leadMarkers.push(marker);
             marker.addTo(map);
         }
@@ -275,13 +295,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.addEventListener('click', function(e) {
-        if (e.target && e.target.classList.contains('edit-lead-btn')) {
-            const leadId = e.target.dataset.leadId;
-            openEditModal(leadId);
-        }
+        // The edit button on the popup is gone, so this listener is no longer needed for that.
+        // It could be used for other things, so we'll leave it for now but it's not strictly necessary.
     });
 
+
     map.on('click', (e) => {
+        // Prevent opening the add modal if a marker (real or temporary) was clicked
         if (e.originalEvent.target.closest('.leaflet-marker-icon') || e.originalEvent.target.closest('.leaflet-control')) {
             return;
         }
@@ -425,6 +445,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Main App Initialization ---
     const initializeMap = async () => {
         try {
+            // Center on user first
+            centerOnUser();
+
             const response = await fetch('/api/statuses');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
