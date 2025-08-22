@@ -78,23 +78,49 @@ document.addEventListener('DOMContentLoaded', () => {
         return card;
     };
 
+    let allLeads = []; // To store all leads fetched from the server
+    const searchInput = document.getElementById('lead-search-input');
+
+    // Function to render leads based on a filter
+    const renderLeads = (leadsToRender) => {
+        // Clear existing cards from all columns
+        document.querySelectorAll('.kanban-column').forEach(column => {
+            // Get all children that are lead cards and remove them
+            const cards = column.querySelectorAll('.lead-card');
+            cards.forEach(card => card.remove());
+        });
+
+        leadsToRender.forEach(lead => {
+            const column = document.querySelector(`.kanban-column[data-status="${lead.status}"]`);
+            if (column) {
+                const card = createLeadCard(lead);
+                column.appendChild(card);
+            }
+        });
+    };
+
     // Function to load and display all leads
     const loadLeads = async () => {
         try {
             const response = await fetch('/api/leads');
-            const leads = await response.json();
-
-            leads.forEach(lead => {
-                const column = document.querySelector(`.kanban-column[data-status="${lead.status}"]`);
-                if (column) {
-                    const card = createLeadCard(lead);
-                    column.appendChild(card);
-                }
-            });
+            allLeads = await response.json(); // Store all leads
+            renderLeads(allLeads); // Initial render
         } catch (error) {
             console.error('Error loading leads:', error);
         }
     };
+
+    // Event listener for the search input
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase();
+        const filteredLeads = allLeads.filter(lead => {
+            const nameMatch = lead.name && lead.name.toLowerCase().includes(query);
+            const phoneMatch = lead.phone && lead.phone.toLowerCase().includes(query);
+            const addressMatch = lead.address?.full_address && lead.address.full_address.toLowerCase().includes(query);
+            return nameMatch || phoneMatch || addressMatch;
+        });
+        renderLeads(filteredLeads);
+    });
 
     // Function to build the Kanban board columns from a list of statuses
     const buildKanbanBoard = (statuses) => {

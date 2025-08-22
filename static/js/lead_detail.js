@@ -170,6 +170,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const handleAdjustPin = async () => {
+        if (!currentLead) return;
+
+        const address = leadAddressInput.value;
+        if (!address) {
+            showToast('Address field is empty.', 'error');
+            return;
+        }
+
+        showToast('Geocoding address...', 'info');
+
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+            const data = await response.json();
+
+            if (data.length > 0) {
+                const newLat = parseFloat(data[0].lat);
+                const newLng = parseFloat(data[0].lon);
+
+                const updatedData = {
+                    address: {
+                        ...currentLead.address,
+                        full_address: address,
+                        lat: newLat,
+                        lng: newLng
+                    }
+                };
+
+                const updateResponse = await fetch(`/api/leads/${LEAD_ID}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData),
+                });
+
+                if (updateResponse.ok) {
+                    currentLead = await updateResponse.json();
+                    renderLeadData();
+                    showToast('Pin location updated successfully!');
+                } else {
+                    showToast('Failed to update pin location.', 'error');
+                }
+            } else {
+                showToast('Could not find location for that address.', 'error');
+            }
+        } catch (error) {
+            console.error('Error geocoding address:', error);
+            showToast('An error occurred during geocoding.', 'error');
+        }
+    };
+
     const initializePage = async () => {
         await fetchLeadData();
         // We can only add the listener after we're sure the lead data has been fetched
@@ -177,6 +227,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const deleteBtn = document.getElementById('delete-lead-btn');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', handleDeleteLead);
+        }
+
+        const adjustPinBtn = document.getElementById('adjust-pin-btn');
+        if (adjustPinBtn) {
+            adjustPinBtn.addEventListener('click', handleAdjustPin);
         }
     };
 

@@ -61,36 +61,70 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     searchInput.addEventListener('input', async () => {
-        const query = searchInput.value;
-        if (query.length < 3) {
-            searchSuggestions.innerHTML = '';
+        const query = searchInput.value.toLowerCase();
+        searchSuggestions.innerHTML = '';
+
+        if (query.length < 2) {
             return;
         }
 
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
-        const data = await response.json();
-
-        searchSuggestions.innerHTML = '';
-        data.forEach(item => {
-            const div = document.createElement('div');
-            div.textContent = item.display_name;
-            div.addEventListener('click', () => {
-                const lat = parseFloat(item.lat);
-                const lon = parseFloat(item.lon);
-                map.setView([lat, lon], 14); // Zoom in a bit closer
-                placeTemporaryMarker(lat, lon);
-                searchInput.value = item.display_name;
-                searchSuggestions.innerHTML = '';
-            });
-            searchSuggestions.appendChild(div);
+        // --- 1. Search existing leads ---
+        const matchedLeads = Object.values(allLeads).filter(lead => {
+            const nameMatch = lead.name && lead.name.toLowerCase().includes(query);
+            const phoneMatch = lead.phone && lead.phone.toLowerCase().includes(query);
+            const addressMatch = lead.address?.full_address && lead.address.full_address.toLowerCase().includes(query);
+            return nameMatch || phoneMatch || addressMatch;
         });
+
+        if (matchedLeads.length > 0) {
+            matchedLeads.forEach(lead => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.innerHTML = `<b>${lead.name}</b><br><small>${lead.address.full_address}</small>`;
+                div.addEventListener('click', () => {
+                    map.setView([lead.address.lat, lead.address.lng], 18); // Zoom in close
+                    // Find and open the lead's popup
+                    const marker = leadMarkers.find(m => m.leadData.id === lead.id);
+                    if (marker) {
+                        marker.openPopup();
+                    }
+                    searchInput.value = lead.name;
+                    searchSuggestions.innerHTML = '';
+                });
+                searchSuggestions.appendChild(div);
+            });
+            return; // Stop here if we found leads
+        }
+
+        // --- 2. If no leads found, search OpenStreetMap ---
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+            const data = await response.json();
+
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.textContent = item.display_name;
+                div.addEventListener('click', () => {
+                    const lat = parseFloat(item.lat);
+                    const lon = parseFloat(item.lon);
+                    map.setView([lat, lon], 14);
+                    placeTemporaryMarker(lat, lon);
+                    searchInput.value = item.display_name;
+                    searchSuggestions.innerHTML = '';
+                });
+                searchSuggestions.appendChild(div);
+            });
+        } catch (error) {
+            console.error('Error fetching from Nominatim:', error);
+        }
     });
 
     const centerOnUser = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
                 const { latitude, longitude } = position.coords;
-                map.setView([latitude, longitude], 14); // Zoom in a bit closer
+                map.setView([latitude, longitude], 17); // Zoom in a bit closer
                 placeTemporaryMarker(latitude, longitude);
             }, () => {
                 showToast('Could not get your location.', 'error');
@@ -133,8 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const addressStr = lead.address?.full_address || 'No address provided';
         return `<b>${lead.name || 'Unnamed Lead'}</b><br>
                 ${addressStr}<br>
-                ${lead.phone || ''}`;
-        // The edit button is removed as per the requirement.
+                ${lead.phone || ''}
+                <br><a href="/leads/${lead.id}" style="font-weight: bold; color: #007bff;">View Details</a>`;
     };
 
     const addLeadMarker = (lead) => {
@@ -143,10 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
             marker.bindPopup(generatePopupContent(lead));
             marker.leadData = lead; // Store full lead data on the marker
 
-            // Make the marker clickable to navigate to the lead detail page
-            marker.on('click', () => {
-                window.location.href = `/leads/${lead.id}`;
-            });
+            // The 'click' event is now handled by the popup, which opens by default.
+            // The link to the lead detail page is inside the popup content.
 
             leadMarkers.push(marker);
             marker.addTo(map);
