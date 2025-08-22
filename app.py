@@ -46,11 +46,14 @@ def api_create_lead():
     new_lead = {
         'id': lead_id_str,
         'name': data.get('name', ''),
-        'address': data.get('address', {}), # Expect an object now
+        'address': data.get('address', {}),
         'phone': data.get('phone', ''),
-        'notes': [], # Initialize notes as a list for activity logging
-        'status': 'New' # Default status
+        'notes': [],
+        'status': 'New'
     }
+    # The address object should contain lat, lng, and full_address
+    if 'address' in data and 'full_address' in data['address']:
+        new_lead['address']['full_address'] = data['address']['full_address']
 
     leads[lead_id_str] = new_lead
     save_leads(leads)

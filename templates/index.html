@@ -92,6 +92,7 @@
     </header>
     <main>
         <div id="map"></div>
+        <button id="center-on-me">Center on Me</button>
         <div id="filter-container">
             <h4>Filter by Status</h4>
             <div class="filter-option"><label><input type="checkbox" name="status" value="New" checked> New</label></div>
@@ -116,6 +117,7 @@
                 <input type="tel" id="add-phone">
                 <label for="add-address">Address:</label>
                 <input type="text" id="add-address">
+                <div id="address-suggestions"></div>
                  <div class="modal-actions">
                     <button type="submit" class="btn-save">Save Lead</button>
                     <button type="button" class="btn-cancel" onclick="closeAddModal()">Cancel</button>
