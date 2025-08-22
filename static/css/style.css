@@ -32,6 +32,7 @@ nav a:hover {
 
 main {
     padding: 1rem;
+    position: relative;
 }
 
 #map {
@@ -61,4 +62,23 @@ main {
     margin-top: 0;
     border-bottom: 2px solid #ccc;
     padding-bottom: 0.5rem;
+}
+
+#center-on-me {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    z-index: 1000; /* Leaflet's default z-index for markers is around 400-600 */
+    padding: 10px;
+    background-color: #fff;
+    border: 2px solid #007bff;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #007bff;
+}
+
+#center-on-me:hover {
+    background-color: #007bff;
+    color: #fff;
 }

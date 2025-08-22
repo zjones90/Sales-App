@@ -69,4 +69,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial load of leads
     loadLeads();
+
+    // Event listener for the "Center on Me" button
+    const centerOnMeButton = document.getElementById('center-on-me');
+    centerOnMeButton.addEventListener('click', () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const { latitude, longitude } = position.coords;
+                map.setView([latitude, longitude], 13); // Zoom in closer when centering
+            }, (error) => {
+                console.error('Error getting location:', error);
+                alert('Could not get your location. Please ensure you have granted permission.');
+            });
+        } else {
+            alert('Geolocation is not supported by this browser.');
+        }
+    });
 });
