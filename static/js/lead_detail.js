@@ -1,4 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Toast Notification Function ---
+    const showToast = (message, type = 'success') => {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+
+        container.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 100);
+
+        // Animate out and remove
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                container.removeChild(toast);
+            }, 300);
+        }, 3000);
+    };
+
     const leadNameEl = document.getElementById('lead-name');
     const leadStatusEl = document.getElementById('lead-status');
     const leadPhoneEl = document.getElementById('lead-phone');
@@ -76,16 +105,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentLead = await response.json();
                 renderLeadData(); // Re-render the data
                 noteTextEl.value = ''; // Clear the textarea
+                showToast('Note added successfully!');
             } else {
-                alert('Failed to add note.');
+                showToast('Failed to add note.', 'error');
             }
         } catch (error) {
             console.error('Error adding note:', error);
-            alert('An error occurred while adding the note.');
+            showToast('An error occurred while adding the note.', 'error');
         }
     };
 
     addNoteForm.addEventListener('submit', handleAddNote);
 
-    fetchLeadData();
+    const handleDeleteLead = async () => {
+        if (!currentLead) return;
+
+        if (confirm('Are you sure you want to permanently delete this lead?')) {
+            try {
+                const response = await fetch(`/api/leads/${LEAD_ID}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    showToast('Lead deleted successfully. Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = '/leads'; // Redirect to the leads list
+                    }, 1500);
+                } else {
+                    showToast('Failed to delete lead.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting lead:', error);
+                showToast('An error occurred while deleting the lead.', 'error');
+            }
+        }
+    };
+
+    const initializePage = async () => {
+        await fetchLeadData();
+        // We can only add the listener after we're sure the lead data has been fetched
+        // and the button is on the page.
+        const deleteBtn = document.getElementById('delete-lead-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', handleDeleteLead);
+        }
+    };
+
+    initializePage();
 });

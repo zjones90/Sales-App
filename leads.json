@@ -1,18 +1,4 @@
 {
-    "1": {
-        "id": "1",
-        "name": "New Test Lead",
-        "address": {
-            "lat": 39.027718840211605,
-            "lng": -118.30078125000001,
-            "full_address": "Placeholder address"
-        },
-        "phone": "123-456-7890",
-        "notes": [
-            "This is a test note."
-        ],
-        "status": "New"
-    },
     "2": {
         "id": "2",
         "name": "Test Lead for Filtering",
