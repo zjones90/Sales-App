@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const phoneInput = document.getElementById('edit-phone');
     const editAddressInput = document.getElementById('edit-address');
     const notesInput = document.getElementById('edit-notes');
-    const statusInput = document.getElementById('edit-status');
+    const statusInput = document.getElementById('_status');
 
 
     // --- Functions ---
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const buildControlsFromStatuses = (statuses) => {
         const filterContainer = document.getElementById('filter-container');
-        const statusDropdown = document.getElementById('edit-status');
+        const statusDropdown = document.getElementById('_status');
 
         // Clear any existing placeholders
         filterContainer.innerHTML = '<h4>Filter by Status</h4>';
