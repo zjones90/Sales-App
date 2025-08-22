@@ -103,6 +103,27 @@
         </div>
     </main>
 
+    <!-- Add Lead Modal -->
+    <div id="add-modal" class="modal-backdrop" style="display:none;">
+        <div class="modal-content">
+            <h3>Add New Lead</h3>
+            <form id="add-form">
+                <input type="hidden" id="add-lat">
+                <input type="hidden" id="add-lng">
+                <label for="add-name">Name:</label>
+                <input type="text" id="add-name" required>
+                <label for="add-phone">Phone:</label>
+                <input type="tel" id="add-phone">
+                <label for="add-address">Address:</label>
+                <input type="text" id="add-address">
+                 <div class="modal-actions">
+                    <button type="submit" class="btn-save">Save Lead</button>
+                    <button type="button" class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Edit Lead Modal -->
     <div id="edit-modal" class="modal-backdrop" style="display:none;">
         <div class="modal-content">
@@ -113,6 +134,8 @@
                 <input type="text" id="edit-name" required>
                 <label for="edit-phone">Phone:</label>
                 <input type="tel" id="edit-phone">
+                <label for="edit-address">Address:</label>
+                <input type="text" id="edit-address">
                 <label for="edit-notes">Notes:</label>
                 <textarea id="edit-notes" rows="4"></textarea>
                 <div class="modal-actions">

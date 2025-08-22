@@ -24,16 +24,28 @@ document.addEventListener('DOMContentLoaded', () => {
     let allLeads = {}; // Object to store full lead data by ID
 
     // --- Modal Elements ---
+    const addModal = document.getElementById('add-modal');
+    const addForm = document.getElementById('add-form');
+    const addLatInput = document.getElementById('add-lat');
+    const addLngInput = document.getElementById('add-lng');
+    const addNameInput = document.getElementById('add-name');
+    const addPhoneInput = document.getElementById('add-phone');
+    const addAddressInput = document.getElementById('add-address');
+
     const editModal = document.getElementById('edit-modal');
     const editForm = document.getElementById('edit-form');
     const leadIdInput = document.getElementById('edit-lead-id');
     const nameInput = document.getElementById('edit-name');
     const phoneInput = document.getElementById('edit-phone');
+    const editAddressInput = document.getElementById('edit-address');
     const notesInput = document.getElementById('edit-notes');
+
 
     // --- Functions ---
     const generatePopupContent = (lead) => {
+        const addressStr = lead.address?.street || 'No address provided';
         return `<b>${lead.name || 'Unnamed Lead'}</b><br>
+                ${addressStr}<br>
                 ${lead.phone || ''}<br>
                 <button class="edit-lead-btn" data-lead-id="${lead.id}">Edit</button>`;
     };
@@ -78,6 +90,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const openAddModal = async (latlng) => {
+        addLatInput.value = latlng.lat;
+        addLngInput.value = latlng.lng;
+        addNameInput.value = '';
+        addPhoneInput.value = '';
+        addAddressInput.value = 'Fetching address...';
+        addModal.style.display = 'flex';
+
+        // Reverse geocode
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}`);
+            const data = await response.json();
+            if (data.display_name) {
+                addAddressInput.value = data.display_name;
+            } else {
+                addAddressInput.value = 'Could not find address.';
+            }
+        } catch (error) {
+            console.error('Reverse geocoding failed:', error);
+            addAddressInput.value = 'Could not find address.';
+        }
+    };
+
+    window.closeAddModal = () => {
+        addModal.style.display = 'none';
+    };
+
     window.openEditModal = (leadId) => {
         const lead = allLeads[leadId];
         if (!lead) return;
@@ -85,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         leadIdInput.value = lead.id;
         nameInput.value = lead.name;
         phoneInput.value = lead.phone;
-        // Notes are now an array, join them with a newline for editing
+        editAddressInput.value = lead.address?.street || '';
         notesInput.value = lead.notes.join('\n');
         editModal.style.display = 'flex';
     };
@@ -97,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
     document.querySelectorAll('#filter-container input').forEach(cb => cb.addEventListener('change', updateMapFilters));
 
-    // Use event delegation for edit buttons in popups
     map.on('popupopen', (e) => {
         const btn = e.popup._container.querySelector('.edit-lead-btn');
         if (btn) {
@@ -108,16 +146,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // New lead creation
-    map.on('click', async (e) => {
-        const leadName = prompt("Enter lead name:");
-        if (leadName === null) return;
-        const leadPhone = prompt("Enter lead phone number:");
-        if (leadPhone === null) return;
+    map.on('click', (e) => {
+        // Prevent creating new leads when clicking on a marker or control
+        if (e.originalEvent.target.closest('.leaflet-marker-icon') || e.originalEvent.target.closest('.leaflet-control')) {
+            return;
+        }
+        openAddModal(e.latlng);
+    });
 
+    addForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         const newLead = {
-            name: leadName, phone: leadPhone,
-            address: { lat: e.latlng.lat, lng: e.latlng.lng }
+            name: addNameInput.value,
+            phone: addPhoneInput.value,
+            address: {
+                lat: parseFloat(addLatInput.value),
+                lng: parseFloat(addLngInput.value),
+                street: addAddressInput.value
+            }
         };
 
         try {
@@ -127,7 +173,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(newLead),
             });
             if (response.ok) {
-                await loadLeads(); // Reload all leads to get the new one
+                closeAddModal();
+                await loadLeads();
             } else {
                 alert('Failed to create lead.');
             }
@@ -136,14 +183,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Handle modal form submission
     editForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const leadId = leadIdInput.value;
+        const lead = allLeads[leadId];
         const updatedData = {
             name: nameInput.value,
             phone: phoneInput.value,
-            // Split notes back into an array by newline character
+            address: {
+                ...lead.address, // Preserve original lat/lng
+                street: editAddressInput.value
+            },
             notes: notesInput.value.split('\n').filter(n => n.trim() !== ''),
         };
 
@@ -156,9 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 const updatedLead = await response.json();
-                // Update local data
                 allLeads[leadId] = updatedLead;
-                // Find and update the marker
                 const markerToUpdate = leadMarkers.find(m => m.leadData.id === leadId);
                 if (markerToUpdate) {
                     markerToUpdate.leadData = updatedLead;
