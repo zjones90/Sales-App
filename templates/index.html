@@ -93,11 +93,15 @@
     <main>
         <div id="map"></div>
         <div id="search-container">
-            <button id="center-on-me"></button>
         </div>
-        <div id="filter-container">
-            <h4>Filter by Status</h4>
-            <!-- Filters will be generated dynamically by map.js -->
+        <div id="filter-control-container">
+            <button id="filter-button">Filter</button>
+            <div id="filter-panel" style="display: none;">
+                <h4>Filter by Status</h4>
+                <div id="filter-options">
+                    <!-- Checkboxes will be populated here by map.js -->
+                </div>
+            </div>
         </div>
     </main>
 

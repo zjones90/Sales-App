@@ -137,38 +137,120 @@ main {
     top: 10px;
     left: 50px;
     z-index: 1000;
-    display: flex;
-    align-items: center;
-    background-color: #fff;
-    border-radius: 4px;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
-}
-#center-on-me {
-    background-color: #fff;
-    border: none;
-    border-right: 1px solid #ccc;
-    cursor: pointer;
-    padding: 9px;
-    font-size: 1.2rem;
-    border-radius: 4px 0 0 4px;
+    /* The container itself doesn't need styling, the child will have it */
 }
 
-#center-on-me:hover {
+/* Style the geosearch control container */
+.leaflet-control-geosearch {
+    display: flex;
+    flex-direction: row-reverse; /* Puts the input before the button */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+    background-color: #fff;
+    overflow: hidden; /* Ensures the border-radius is respected by children */
+}
+
+/* Style the geolocate button created by map.js */
+.geolocate-button {
+    background-color: #fff;
+    border: none;
+    border-left: 1px solid #ccc; /* Separator line */
+    cursor: pointer;
+    padding: 0 10px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.geolocate-button:hover {
     background-color: #f4f4f4;
 }
 
-#center-on-me::before {
+.geolocate-button::before {
     content: '🎯'; /* Target icon */
     color: #333;
 }
-.leaflet-control-geosearch {
-    border-left: none !important;
+
+/* Adjust the geosearch input field */
+.leaflet-control-geosearch .results {
+    border-top: 1px solid #ccc;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
 }
 
-.leaflet-control-geosearch, .leaflet-control-geosearch:hover {
-    border-color: transparent !important;
-    border-left: 1px solid #ccc !important;
+.leaflet-control-geosearch form {
+    margin: 0;
+    display: flex;
 }
+
+.leaflet-control-geosearch input[type="text"] {
+    border: none;
+    padding: 0 10px;
+    outline: none;
+    height: 36px; /* Match button height */
+    box-sizing: border-box;
+}
+
+.leaflet-control-geosearch .reset {
+    display: none; /* Hiding the 'x' from the search bar for a cleaner look */
+}
+
+/* Filter Control Styles */
+#filter-control-container {
+    position: absolute;
+    top: 50px; /* Position below the search bar */
+    left: 10px;
+    z-index: 800;
+}
+
+#filter-button {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+}
+
+#filter-button:hover {
+    background-color: #f4f4f4;
+}
+
+#filter-panel {
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+    margin-top: 5px;
+    width: 150px; /* Or as needed */
+}
+
+#filter-panel h4 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+#filter-options .filter-option {
+    display: block;
+    margin-bottom: 5px;
+}
+
+#filter-options .filter-option label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+#filter-options .filter-option input {
+    margin-right: 8px;
+}
+
 
 /* Kanban Board Styles */
 #kanban-board {
