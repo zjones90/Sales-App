@@ -140,6 +140,15 @@
                 <input type="text" id="edit-address">
                 <label for="edit-notes">Notes:</label>
                 <textarea id="edit-notes" rows="4"></textarea>
+                <label for="edit-status">Status:</label>
+                <select id="edit-status">
+                    <option value="New">New</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Site Visit Scheduled">Site Visit Scheduled</option>
+                    <option value="Quote Sent">Quote Sent</option>
+                    <option value="Won">Won</option>
+                    <option value="Lost">Lost</option>
+                </select>
                 <div class="modal-actions">
                     <button type="submit" class="btn-save">Save Changes</button>
                     <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>

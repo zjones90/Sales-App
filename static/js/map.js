@@ -39,11 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const phoneInput = document.getElementById('edit-phone');
     const editAddressInput = document.getElementById('edit-address');
     const notesInput = document.getElementById('edit-notes');
+    const statusInput = document.getElementById('edit-status');
 
 
     // --- Functions ---
     const generatePopupContent = (lead) => {
-        const addressStr = lead.address?.street || 'No address provided';
+        const addressStr = lead.address?.full_address || 'No address provided';
         return `<b>${lead.name || 'Unnamed Lead'}</b><br>
                 ${addressStr}<br>
                 ${lead.phone || ''}<br>
@@ -124,8 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
         leadIdInput.value = lead.id;
         nameInput.value = lead.name;
         phoneInput.value = lead.phone;
-        editAddressInput.value = lead.address?.street || '';
+        editAddressInput.value = lead.address?.full_address || '';
         notesInput.value = lead.notes.join('\n');
+        statusInput.value = lead.status;
         editModal.style.display = 'flex';
     };
 
@@ -164,13 +166,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
     document.querySelectorAll('#filter-container input').forEach(cb => cb.addEventListener('change', updateMapFilters));
 
-    map.on('popupopen', (e) => {
-        const btn = e.popup._container.querySelector('.edit-lead-btn');
-        if (btn) {
-            btn.addEventListener('click', () => {
-                const leadId = btn.dataset.leadId;
-                openEditModal(leadId);
-            });
+    // Use event delegation on the document to handle clicks on dynamically created buttons
+    document.addEventListener('click', function(e) {
+        // Check if the clicked element is an edit button
+        if (e.target && e.target.classList.contains('edit-lead-btn')) {
+            const leadId = e.target.dataset.leadId;
+            openEditModal(leadId);
         }
     });
 
@@ -220,9 +221,10 @@ document.addEventListener('DOMContentLoaded', () => {
             phone: phoneInput.value,
             address: {
                 ...lead.address, // Preserve original lat/lng
-                street: editAddressInput.value
+                full_address: editAddressInput.value
             },
             notes: notesInput.value.split('\n').filter(n => n.trim() !== ''),
+            status: statusInput.value,
         };
 
         try {
