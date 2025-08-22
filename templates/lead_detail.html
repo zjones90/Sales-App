@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Details</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .lead-detail-container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .communication-buttons a {
+            display: inline-block;
+            padding: 0.8rem 1.2rem;
+            margin-right: 1rem;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .communication-buttons a:hover {
+            background-color: #0056b3;
+        }
+        .activity-log {
+            margin-top: 2rem;
+        }
+        .activity-log h3 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        .activity-log ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .activity-log li {
+            background: #f9f9f9;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+        #add-note-form {
+            margin-top: 1.5rem;
+        }
+        #add-note-form textarea {
+            width: 100%;
+            padding: 0.5rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        #add-note-form button {
+            margin-top: 0.5rem;
+            padding: 0.7rem 1.5rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #add-note-form button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><a href="/" style="color:white; text-decoration:none;">Pool Sales App</a></h1>
+        <nav>
+            <a href="/">Map</a>
+            <a href="/leads">Leads</a>
+        </nav>
+    </header>
+    <main>
+        <div id="lead-detail-container" class="lead-detail-container">
+            <h2 id="lead-name"></h2>
+            <p><strong>Status:</strong> <span id="lead-status"></span></p>
+            <p><strong>Phone:</strong> <span id="lead-phone"></span></p>
+            <div class="communication-buttons">
+                <a id="call-btn" href="#">Call</a>
+                <a id="text-btn" href="#">Text</a>
+            </div>
+
+            <div class="activity-log">
+                <h3>Activity Log</h3>
+                <ul id="notes-list"></ul>
+                <form id="add-note-form">
+                    <textarea id="note-text" rows="3" placeholder="Log a call, text, or meeting..."></textarea>
+                    <button type="submit">Add Note</button>
+                </form>
+            </div>
+        </div>
+    </main>
+    <script>
+        // Pass the lead_id from Flask template to the JS script
+        const LEAD_ID = "{{ lead_id }}";
+    </script>
+    <script src="/static/js/lead_detail.js"></script>
+</body>
+</html>
