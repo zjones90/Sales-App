@@ -39,11 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const phoneInput = document.getElementById('edit-phone');
     const editAddressInput = document.getElementById('edit-address');
     const notesInput = document.getElementById('edit-notes');
+    const statusInput = document.getElementById('edit-status');
 
 
     // --- Functions ---
     const generatePopupContent = (lead) => {
-        const addressStr = lead.address?.street || 'No address provided';
+        const addressStr = lead.address?.full_address || 'No address provided';
         return `<b>${lead.name || 'Unnamed Lead'}</b><br>
                 ${addressStr}<br>
                 ${lead.phone || ''}<br>
@@ -90,6 +91,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const buildControlsFromStatuses = (statuses) => {
+        const filterContainer = document.getElementById('filter-container');
+        const statusDropdown = document.getElementById('edit-status');
+
+        // Clear any existing placeholders
+        filterContainer.innerHTML = '<h4>Filter by Status</h4>';
+        statusDropdown.innerHTML = '';
+
+        statuses.forEach(status => {
+            // Build filter checkboxes
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'filter-option';
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'status';
+            checkbox.value = status;
+            checkbox.checked = true;
+            checkbox.addEventListener('change', updateMapFilters);
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(` ${status}`));
+            optionDiv.appendChild(label);
+            filterContainer.appendChild(optionDiv);
+
+            // Build edit modal dropdown options
+            const dropdownOption = document.createElement('option');
+            dropdownOption.value = status;
+            dropdownOption.textContent = status;
+            statusDropdown.appendChild(dropdownOption);
+        });
+    };
+
     const openAddModal = async (latlng) => {
         addLatInput.value = latlng.lat;
         addLngInput.value = latlng.lng;
@@ -124,8 +157,9 @@ document.addEventListener('DOMContentLoaded', () => {
         leadIdInput.value = lead.id;
         nameInput.value = lead.name;
         phoneInput.value = lead.phone;
-        editAddressInput.value = lead.address?.street || '';
+        editAddressInput.value = lead.address?.full_address || '';
         notesInput.value = lead.notes.join('\n');
+        statusInput.value = lead.status;
         editModal.style.display = 'flex';
     };
 
@@ -162,20 +196,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Event Listeners ---
-    document.querySelectorAll('#filter-container input').forEach(cb => cb.addEventListener('change', updateMapFilters));
-
-    map.on('popupopen', (e) => {
-        const btn = e.popup._container.querySelector('.edit-lead-btn');
-        if (btn) {
-            btn.addEventListener('click', () => {
-                const leadId = btn.dataset.leadId;
-                openEditModal(leadId);
-            });
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('edit-lead-btn')) {
+            const leadId = e.target.dataset.leadId;
+            openEditModal(leadId);
         }
     });
 
     map.on('click', (e) => {
-        // Prevent creating new leads when clicking on a marker or control
         if (e.originalEvent.target.closest('.leaflet-marker-icon') || e.originalEvent.target.closest('.leaflet-control')) {
             return;
         }
@@ -219,10 +247,11 @@ document.addEventListener('DOMContentLoaded', () => {
             name: nameInput.value,
             phone: phoneInput.value,
             address: {
-                ...lead.address, // Preserve original lat/lng
-                street: editAddressInput.value
+                ...lead.address,
+                full_address: editAddressInput.value
             },
             notes: notesInput.value.split('\n').filter(n => n.trim() !== ''),
+            status: statusInput.value,
         };
 
         try {
@@ -249,13 +278,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Event listener for the "Center on Me" button
     const centerOnMeButton = document.getElementById('center-on-me');
     centerOnMeButton.addEventListener('click', () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
                 const { latitude, longitude } = position.coords;
-                map.setView([latitude, longitude], 13); // Zoom in closer when centering
+                map.setView([latitude, longitude], 13);
             }, (error) => {
                 console.error('Error getting location:', error);
                 alert('Could not get your location. Please ensure you have granted permission.');
@@ -265,6 +293,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Initial Load ---
-    loadLeads();
+    // --- Main App Initialization ---
+    const initializeMap = async () => {
+        try {
+            const response = await fetch('/api/statuses');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const statuses = await response.json();
+            buildControlsFromStatuses(statuses);
+            await loadLeads();
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            document.getElementById('filter-container').innerHTML += '<p>Error loading filters.</p>';
+        }
+    };
+
+    initializeMap();
 });

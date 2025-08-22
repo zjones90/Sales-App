@@ -7,6 +7,18 @@ app = Flask(__name__)
 # Path for our JSON data file
 LEADS_FILE = 'leads.json'
 
+# Define the canonical list of lead statuses
+LEAD_STATUSES = [
+    "New",
+    "Contacted",
+    "Measured",
+    "Presented",
+    "Signed",
+    "Dug",
+    "Completed",
+    "Lost"
+]
+
 # Helper function to read leads from the JSON file
 def get_leads():
     if not os.path.exists(LEADS_FILE):
@@ -24,6 +36,10 @@ def save_leads(leads):
         json.dump(leads, f, indent=4)
 
 # --- API Endpoints ---
+
+@app.route('/api/statuses', methods=['GET'])
+def api_get_statuses():
+    return jsonify(LEAD_STATUSES)
 
 @app.route('/api/leads', methods=['GET'])
 def api_get_leads():
@@ -70,9 +86,13 @@ def api_update_lead(lead_id):
     if lead_id not in leads:
         abort(404, description="Lead not found")
 
-    # Update only the fields provided in the request
+    # Perform a deep merge for nested objects like 'address'
     for key, value in data.items():
-        if key in leads[lead_id]:
+        if key == 'address' and isinstance(value, dict):
+            if 'address' not in leads[lead_id] or not isinstance(leads[lead_id].get('address'), dict):
+                leads[lead_id]['address'] = {}
+            leads[lead_id]['address'].update(value)
+        elif key in leads[lead_id]:
             leads[lead_id][key] = value
 
     save_leads(leads)
