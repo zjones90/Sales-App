@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (matchedLeads.length > 0) {
             matchedLeads.forEach(lead => {
                 const div = document.createElement('div');
-                div.className = 'suggestion-item';
+                div.className = 'suggestion-item list-group-item list-group-item-action';
                 const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
                 div.innerHTML = `<b>${fullName}</b><br><small>${lead.address.full_address}</small>`;
                 div.addEventListener('click', () => {
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             data.forEach(item => {
                 const div = document.createElement('div');
-                div.className = 'suggestion-item';
+                div.className = 'suggestion-item list-group-item list-group-item-action';
                 div.textContent = item.display_name;
                 div.addEventListener('click', () => {
                     const lat = parseFloat(item.lat);
@@ -180,7 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let allLeads = {}; // Object to store full lead data by ID
 
     // --- Modal Elements ---
-    const addModal = document.getElementById('add-modal');
+    const addModalEl = document.getElementById('add-modal');
+    const addModal = new bootstrap.Modal(addModalEl);
     const addForm = document.getElementById('add-form');
     const addLatInput = document.getElementById('add-lat');
     const addLngInput = document.getElementById('add-lng');
@@ -189,7 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const addPhoneInput = document.getElementById('add-phone');
     const addAddressInput = document.getElementById('add-address');
 
-    const editModal = document.getElementById('edit-modal');
+    const editModalEl = document.getElementById('edit-modal');
+    const editModal = new bootstrap.Modal(editModalEl);
     const editForm = document.getElementById('edit-form');
     const leadIdInput = document.getElementById('edit-lead-id');
     const nameInput = document.getElementById('edit-name');
@@ -198,6 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const notesInput = document.getElementById('edit-notes');
     const statusInput = document.getElementById('_status');
 
+    const pinDragModalEl = document.getElementById('pin-drag-modal');
+    const pinDragModal = new bootstrap.Modal(pinDragModalEl);
 
     // --- Functions ---
     const generatePopupContent = (lead) => {
@@ -207,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Status: ${lead.status || 'N/A'}<br>
                 ${addressStr}<br>
                 ${lead.phone || ''}
-                <br><a href="/leads/${lead.id}" style="font-weight: bold; color: #007bff;">View Details</a>`;
+                <br><a href="/leads/${lead.id}" class="fw-bold">View Details</a>`;
     };
 
     const addLeadMarker = (lead) => {
@@ -248,16 +252,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Show the custom modal
-        const modal = document.getElementById('pin-drag-modal');
         document.getElementById('new-address-text').textContent = newAddress;
-        modal.style.display = 'flex';
+        pinDragModal.show();
 
         const cancelBtn = document.getElementById('pin-drag-cancel');
         const moveOnlyBtn = document.getElementById('pin-drag-move-only');
         const updateAddressBtn = document.getElementById('pin-drag-update-address');
 
         const closePinModal = () => {
-            modal.style.display = 'none';
+            pinDragModal.hide();
             // Clean up event listeners
             cancelBtn.replaceWith(cancelBtn.cloneNode(true));
             moveOnlyBtn.replaceWith(moveOnlyBtn.cloneNode(true));
@@ -378,16 +381,20 @@ document.addEventListener('DOMContentLoaded', () => {
         statuses.forEach(status => {
             // Build filter checkboxes
             const optionDiv = document.createElement('div');
-            optionDiv.className = 'filter-option';
-            const label = document.createElement('label');
+            optionDiv.className = 'form-check';
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
+            checkbox.className = 'form-check-input';
             checkbox.name = 'status';
             checkbox.value = status;
             checkbox.checked = true;
+            checkbox.id = `status-${status.replace(/\s+/g, '-')}`;
             checkbox.addEventListener('change', updateMapFilters);
-            label.appendChild(checkbox);
+            const label = document.createElement('label');
+            label.className = 'form-check-label';
+            label.setAttribute('for', checkbox.id);
             label.appendChild(document.createTextNode(` ${status}`));
+            optionDiv.appendChild(checkbox);
             optionDiv.appendChild(label);
             filterOptionsContainer.appendChild(optionDiv);
 
@@ -406,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addLastNameInput.value = '';
         addPhoneInput.value = '';
         addAddressInput.value = 'Fetching address...';
-        addModal.style.display = 'flex';
+        addModal.show();
 
         // Reverse geocode
         try {
@@ -423,10 +430,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.closeAddModal = () => {
-        addModal.style.display = 'none';
-    };
-
     window.openEditModal = (leadId) => {
         const lead = allLeads[leadId];
         if (!lead) return;
@@ -437,11 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editAddressInput.value = lead.address?.full_address || '';
         notesInput.value = lead.notes.join('\n');
         statusInput.value = lead.status;
-        editModal.style.display = 'flex';
-    };
-
-    window.closeEditModal = () => {
-        editModal.style.display = 'none';
+        editModal.show();
     };
 
     addAddressInput.addEventListener('input', (e) => {
@@ -451,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
             suggestions.forEach(place => {
                 const div = document.createElement('div');
                 div.textContent = place.displayName;
-                div.className = 'suggestion-item';
+                div.className = 'suggestion-item list-group-item list-group-item-action';
                 div.addEventListener('click', () => {
                     addAddressInput.value = place.displayName;
                     addLatInput.value = place.lat;
@@ -461,11 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 addressSuggestions.appendChild(div);
             });
         });
-    });
-
-    document.addEventListener('click', function(e) {
-        // The edit button on the popup is gone, so this listener is no longer needed for that.
-        // It could be used for other things, so we'll leave it for now but it's not strictly necessary.
     });
 
     document.getElementById('add-lead-fab').addEventListener('click', () => {
@@ -501,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(newLead),
             });
             if (response.ok) {
-                closeAddModal();
+                addModal.hide();
                 await loadLeads();
                 showToast('Lead created successfully!');
             } else {
@@ -571,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         markerToUpdate.setLatLng([updatedLead.address.lat, updatedLead.address.lng]);
                     }
                 }
-                closeEditModal();
+                editModal.hide();
                 showToast('Lead updated successfully!');
             } else {
                 showToast('Failed to update lead.', 'error');
@@ -605,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     delete allLeads[leadId];
 
-                    closeEditModal();
+                    editModal.hide();
                     showToast('Lead deleted successfully.');
                 } else {
                     showToast('Failed to delete lead.', 'error');

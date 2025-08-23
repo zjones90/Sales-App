@@ -67,19 +67,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         filteredTasks.forEach(task => {
             const taskElement = document.createElement('div');
-            taskElement.className = 'task-item';
+            taskElement.className = 'card task-item mb-3';
             taskElement.innerHTML = `
-                <div class="task-item-header">
-                    <h3>${task.title}</h3>
-                    <p>Lead: ${getLeadName(task.lead_id)}</p>
-                </div>
-                <div class="task-item-body">
-                    <p>${task.details}</p>
-                    <p>Due: ${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}</p>
-                </div>
-                <div class="task-item-footer">
-                    <input type="checkbox" ${task.completed ? 'checked' : ''} data-task-id="${task.id}">
-                    <label>Completed</label>
+                <div class="card-body">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">${task.title}</h5>
+                        <small>Due: ${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}</small>
+                    </div>
+                    <p class="mb-1">${task.details}</p>
+                    <small>Lead: ${getLeadName(task.lead_id)}</small>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" ${task.completed ? 'checked' : ''} data-task-id="${task.id}" id="task-${task.id}">
+                        <label class="form-check-label" for="task-${task.id}">
+                            Completed
+                        </label>
+                    </div>
                 </div>
             `;
             taskList.appendChild(taskElement);
