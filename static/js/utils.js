@@ -3,6 +3,29 @@
  * @param {string} query The address query to search for.
  * @param {function(Array<Object>)} callback The function to call with the processed suggestions.
  */
+/**
+ * Constructs a clean address string from Nominatim address components.
+ * @param {Object} addr The address object from a Nominatim response.
+ * @returns {string} A formatted address string.
+ */
+function formatAddress(addr) {
+    const components = [
+        addr.house_number,
+        addr.road,
+        addr.city || addr.town || addr.village,
+        addr.state,
+        addr.postcode
+    ];
+    // Join non-empty components, separated by commas, and clean up spacing.
+    return components.filter(c => c).join(', ').replace(/ ,/g, ',');
+}
+
+
+/**
+ * Fetches address suggestions from Nominatim API, restricted to the US.
+ * @param {string} query The address query to search for.
+ * @param {function(Array<Object>)} callback The function to call with the processed suggestions.
+ */
 async function fetchAddressSuggestions(query, callback) {
     if (query.length < 3) {
         callback([]);
@@ -19,23 +42,9 @@ async function fetchAddressSuggestions(query, callback) {
         const data = await response.json();
 
         const suggestions = data.map(place => {
-            const addr = place.address;
-            const street = addr.road || '';
-            const houseNumber = addr.house_number || '';
-            const city = addr.city || addr.town || addr.village || '';
-            const state = addr.state || '';
-            const postcode = addr.postcode || '';
-
-            // Construct a cleaner display name
-            let displayName = `${houseNumber} ${street}, ${city}, ${state} ${postcode}`.trim().replace(/^ ,| ,$/g, '').replace(/ , ,/g, ',');
-            // Fallback to Nominatim's display name if ours is empty
-            if (displayName.length < 5) {
-                displayName = place.display_name;
-            }
-
-
+            const displayName = formatAddress(place.address);
             return {
-                displayName: displayName,
+                displayName: displayName.length > 5 ? displayName : place.display_name,
                 lat: place.lat,
                 lng: place.lon,
                 fullDetails: place // Keep original details if needed

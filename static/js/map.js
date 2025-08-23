@@ -408,12 +408,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reverse geocode
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}`);
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latlng.lat}&lon=${latlng.lng}`);
             const data = await response.json();
-            if (data.display_name) {
-                addAddressInput.value = data.display_name;
+            if (data.address) {
+                addAddressInput.value = formatAddress(data.address);
             } else {
-                addAddressInput.value = 'Could not find address.';
+                addAddressInput.value = data.display_name || 'Could not find address.';
             }
         } catch (error) {
             console.error('Reverse geocoding failed:', error);
@@ -632,7 +632,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     userMarker = L.marker(latLng, { icon: userLocationIcon }).addTo(map);
                 }
 
-                // Only center the map on the first location update
+                // Only center the map on the first location update if not centered on a lead
                 if (isFirstLocation) {
                     map.setView(latLng, 17);
                     isFirstLocation = false;
@@ -656,6 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const zoom = urlParams.get('zoom') || 18;
         if (lat && lng) {
             map.setView([parseFloat(lat), parseFloat(lng)], parseInt(zoom));
+            isFirstLocation = false; // Prevent location watcher from overriding this view
         }
     };
 
