@@ -25,7 +25,7 @@
     },
     "6": {
         "id": "6",
-        "name": "Zachary Jones",
+        "name": "Zachary Jones New",
         "address": {
             "lat": 33.3787926,
             "lng": -96.5521985,
@@ -39,24 +39,72 @@
         "id": "7",
         "name": "a",
         "address": {
-            "lat": 32.938427454433864,
-            "lng": -97.06411242485048,
-            "full_address": "152 Texan Trail, Grapevine, Tarrant County, Texas, 76051, United States"
+            "lat": 32.938449357965844,
+            "lng": -97.06777632236482,
+            "full_address": "854, East Texas Street, Grapevine, Tarrant County, Texas, 76051, United States"
         },
         "phone": "",
         "notes": [],
-        "status": "New"
+        "status": "Presented"
     },
     "8": {
         "id": "8",
         "name": "Henry Smith",
         "address": {
-            "lat": 32.94447868776112,
-            "lng": -97.09596633911133,
+            "lat": 32.944387535360384,
+            "lng": -97.09591805934907,
             "full_address": "1899, Fall Court, Grapevine, Tarrant County, Texas, 76051, United States"
         },
         "phone": "2148016891",
         "notes": [],
         "status": "Dug"
+    },
+    "9": {
+        "id": "9",
+        "name": "Test",
+        "address": {
+            "lat": 32.93782840165245,
+            "lng": -97.06603825092317,
+            "full_address": "939, East Worth Street, Grapevine, Tarrant County, Texas, 76051, United States"
+        },
+        "phone": "aaaa",
+        "notes": [],
+        "status": "Measured"
+    },
+    "10": {
+        "id": "10",
+        "name": "Test",
+        "address": {
+            "lat": 32.93602274788805,
+            "lng": -97.09051609039308,
+            "full_address": "565, Ridge Road, Grapevine, Tarrant County, Texas, 76051, United States"
+        },
+        "phone": "111",
+        "notes": [],
+        "status": "Contacted"
+    },
+    "11": {
+        "id": "11",
+        "name": "Test 4",
+        "address": {
+            "lat": 32.9383936,
+            "lng": -97.0620928,
+            "full_address": "Fetching address..."
+        },
+        "phone": "aaa",
+        "notes": [],
+        "status": "Completed"
+    },
+    "12": {
+        "id": "12",
+        "name": "aaaA",
+        "address": {
+            "lat": 32.9383936,
+            "lng": -97.0620928,
+            "full_address": "Fetching address..."
+        },
+        "phone": "",
+        "notes": [],
+        "status": "Lost"
     }
 }
