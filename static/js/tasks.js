@@ -67,37 +67,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const showCompleted = showCompletedCheckbox.checked;
 
         let filteredTasks = allTasks.filter(task => {
-            if (!showCompleted && task.completed) {
-                return false;
-            }
-
+            // Filter by search query first
             const leadName = getLeadName(task.lead_id).toLowerCase();
             const searchMatch = (
                 task.title.toLowerCase().includes(query) ||
                 (task.details && task.details.toLowerCase().includes(query)) ||
                 leadName.includes(query)
             );
-
             if (!searchMatch) return false;
 
+            // Then, apply the main filter from the dropdown
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
+            let filterMatch = false;
             switch (filter) {
                 case 'due_today':
-                    if (!task.due_date) return false;
+                    if (!task.due_date) break;
                     const dueDate = new Date(task.due_date);
-                    dueDate.setDate(dueDate.getDate() + 1);
-                    return dueDate.toDateString() === today.toDateString();
+                    dueDate.setUTCHours(0,0,0,0);
+                    filterMatch = dueDate.toDateString() === today.toDateString();
+                    break;
                 case 'overdue':
-                    if (!task.due_date || task.completed) return false;
-                    return new Date(task.due_date) < today;
+                    filterMatch = task.due_date && !task.completed && new Date(task.due_date) < today;
+                    break;
                 case 'all_tasks':
-                    return true; // No additional filtering
+                    filterMatch = true;
+                    break;
                 case 'all': // "All Active"
                 default:
-                    return !task.completed;
+                    filterMatch = !task.completed;
+                    break;
             }
+
+            // Finally, override with "Show Completed" if checked, but not for "All Active"
+            if (showCompleted) {
+                // If the filter already includes completed tasks, or if the task matches the filter anyway
+                if (filter === 'all_tasks' || filterMatch) {
+                    return true;
+                }
+                // If the filter is 'all' (active), and the task is completed, show it
+                if (filter === 'all' && task.completed){
+                    return true;
+                }
+            }
+
+            return filterMatch;
         });
 
         // Sort tasks by due date by default, putting tasks without a due date at the end
@@ -120,44 +135,66 @@ document.addEventListener('DOMContentLoaded', () => {
             taskList.innerHTML = '<p class="text-center text-muted">No tasks match the current filters.</p>';
         }
 
+        // Create a responsive grid
+        taskList.className = 'task-list row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4';
+
+        if (filteredTasks.length === 0) {
+            taskList.innerHTML = '<p class="text-center text-muted">No tasks match the current filters.</p>';
+            return; // Exit early
+        }
+
         filteredTasks.forEach(task => {
-            const taskElement = document.createElement('div');
             const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !task.completed;
-            taskElement.className = `task-item list-group-item d-flex justify-content-between align-items-center ${task.completed ? 'completed' : ''} ${isOverdue ? 'overdue' : ''}`;
-            taskElement.dataset.taskId = task.id;
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'col'; // Bootstrap grid column
+
+            const taskCard = document.createElement('div');
+            taskCard.className = `task-item card h-100 ${task.completed ? 'completed' : ''} ${isOverdue ? 'overdue' : ''}`;
+            taskCard.dataset.taskId = task.id;
+
 
             let dueDateStr = 'No due date';
             let dueDateClass = 'text-muted';
             if (task.due_date) {
                 const dueDate = new Date(task.due_date);
-                dueDate.setDate(dueDate.getDate() + 1);
-                dueDateStr = dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                 // Fix off-by-one day error by using UTC dates
+                dueDate.setUTCHours(0,0,0,0);
+                dueDateStr = dueDate.toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric' });
                 if (isOverdue) {
                     dueDateClass = 'text-danger fw-bold';
                 }
             }
 
             const leadName = getLeadName(task.lead_id);
+            const leadLink = task.lead_id ? `<a href="/leads/${task.lead_id}" class="text-decoration-none">${leadName}</a>` : 'No associated lead';
 
-            taskElement.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <input class="form-check-input task-completed-checkbox me-3" type="checkbox" ${task.completed ? 'checked' : ''} id="task-${task.id}">
-                    <div>
-                        <h6 class="mb-0 task-title">${task.title}</h6>
-                        <small class="task-lead">
-                            <a href="/leads/${task.lead_id}" class="text-decoration-none">${leadName}</a>
-                        </small>
+            taskCard.innerHTML = `
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input task-completed-checkbox" type="checkbox" ${task.completed ? 'checked' : ''} id="task-check-${task.id}">
+                        <label class="form-check-label" for="task-check-${task.id}">
+                            <h6 class="mb-0 task-title">${task.title}</h6>
+                        </label>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn btn-sm btn-link text-secondary edit-task-btn" title="Edit Task"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="btn btn-sm btn-link text-danger delete-task-btn" title="Delete Task"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </div>
-                <div class="d-flex align-items-center">
-                    <small class="task-due-date me-3 ${dueDateClass}">${dueDateStr}</small>
-                    <div class="task-actions">
-                        <button class="btn btn-sm btn-outline-secondary edit-task-btn"><i class="fas fa-pencil-alt"></i></button>
-                        <button class="btn btn-sm btn-outline-danger delete-task-btn"><i class="fas fa-trash-alt"></i></button>
-                    </div>
+                <div class="card-body">
+                    <p class="card-text">${task.details || 'No details provided.'}</p>
+                </div>
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <small class="task-lead">
+                        <i class="fas fa-user-tie me-1"></i> ${leadLink}
+                    </small>
+                    <small class="task-due-date ${dueDateClass}">
+                        <i class="fas fa-calendar-alt me-1"></i> ${dueDateStr}
+                    </small>
                 </div>
             `;
-            taskList.appendChild(taskElement);
+            cardWrapper.appendChild(taskCard);
+            taskList.appendChild(cardWrapper);
         });
     };
 
@@ -223,35 +260,98 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const renderTaskEditView = (taskElement, task) => {
-        // Simple and safe way to create the form elements
-        const titleInput = document.createElement('input');
-        titleInput.type = 'text';
-        titleInput.className = 'form-control mb-2 edit-task-title';
-        titleInput.value = task.title;
+    // --- Edit Task Modal ---
+    const editTaskModalEl = document.getElementById('edit-task-modal');
+    const editTaskModal = new bootstrap.Modal(editTaskModalEl);
+    const editTaskForm = document.getElementById('edit-task-form');
+    const editTaskIdInput = document.getElementById('edit-task-id');
+    const editTaskTitleInput = document.getElementById('edit-task-title');
+    const editTaskDetailsInput = document.getElementById('edit-task-details');
+    const editTaskDueDateInput = document.getElementById('edit-task-due-date');
+    const editTaskLeadSearchInput = document.getElementById('edit-task-lead-search');
+    const editTaskLeadIdInput = document.getElementById('edit-task-lead-id');
+    const editLeadSuggestionsEl = document.getElementById('edit-lead-suggestions');
 
-        const detailsTextarea = document.createElement('textarea');
-        detailsTextarea.className = 'form-control mb-2 edit-task-details';
-        detailsTextarea.rows = 2;
-        detailsTextarea.value = task.details || '';
 
-        const dueDateInput = document.createElement('input');
-        dueDateInput.type = 'date';
-        dueDateInput.className = 'form-control edit-task-due-date';
-        dueDateInput.value = task.due_date ? task.due_date.split('T')[0] : '';
+    const openEditModal = (task) => {
+        editTaskIdInput.value = task.id;
+        editTaskTitleInput.value = task.title;
+        editTaskDetailsInput.value = task.details || '';
+        editTaskDueDateInput.value = task.due_date ? task.due_date.split('T')[0] : '';
 
-        // Replace view elements with inputs
-        taskElement.querySelector('.task-title').replaceWith(titleInput);
-        taskElement.querySelector('.task-details').replaceWith(detailsTextarea);
-        taskElement.querySelector('.task-due-date').replaceWith(dueDateInput);
-
-        // Change buttons to Save/Cancel
-        const actionsContainer = taskElement.querySelector('.task-actions');
-        actionsContainer.innerHTML = `
-            <button class="btn btn-sm btn-success save-task-btn">Save</button>
-            <button class="btn btn-sm btn-secondary cancel-edit-btn">Cancel</button>
-        `;
+        // Set lead info
+        if (task.lead_id) {
+            const lead = allLeads.find(l => l.id === task.lead_id);
+            if (lead) {
+                editTaskLeadSearchInput.value = `${lead.first_name} ${lead.last_name}`;
+                editTaskLeadIdInput.value = task.lead_id;
+            }
+        } else {
+            editTaskLeadSearchInput.value = '';
+            editTaskLeadIdInput.value = '';
+        }
+        editLeadSuggestionsEl.innerHTML = '';
+        editTaskModal.show();
     };
+
+     const handleEditLeadSearch = (e) => {
+        const query = e.target.value.toLowerCase();
+        editLeadSuggestionsEl.innerHTML = '';
+        if (!query) {
+            editTaskLeadIdInput.value = ''; // Clear hidden input if search is cleared
+            return;
+        }
+
+        const matchingLeads = allLeads.filter(lead => {
+            const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.toLowerCase();
+            return fullName.includes(query) ||
+                   lead.phone?.toLowerCase().includes(query) ||
+                   lead.address?.full_address?.toLowerCase().includes(query);
+        });
+
+        matchingLeads.slice(0, 5).forEach(lead => {
+            const div = document.createElement('div');
+            div.className = 'list-group-item list-group-item-action';
+            div.textContent = `${lead.first_name} ${lead.last_name} - ${lead.address.full_address}`;
+            div.addEventListener('click', () => {
+                editTaskLeadSearchInput.value = `${lead.first_name} ${lead.last_name}`;
+                editTaskLeadIdInput.value = lead.id;
+                editLeadSuggestionsEl.innerHTML = '';
+            });
+            editLeadSuggestionsEl.appendChild(div);
+        });
+    };
+
+    const handleUpdateTask = async (e) => {
+        e.preventDefault();
+        const taskId = editTaskIdInput.value;
+        const updatedData = {
+            title: editTaskTitleInput.value,
+            details: editTaskDetailsInput.value,
+            due_date: editTaskDueDateInput.value || null,
+            lead_id: editTaskLeadIdInput.value || null,
+        };
+
+        try {
+            const response = await fetch(`/api/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+
+            if (response.ok) {
+                showToast('Task updated!');
+                editTaskModal.hide();
+                await fetchTasks(); // Refresh list
+            } else {
+                showToast('Failed to update task.', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving task:', error);
+            showToast('An error occurred while saving.', 'error');
+        }
+    };
+
 
     const initializeTasksPage = async () => {
         await fetchLeads();
@@ -261,6 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
         showCompletedCheckbox.addEventListener('change', renderTasks);
         taskLeadSearchInput.addEventListener('input', handleLeadSearch);
         addTaskForm.addEventListener('submit', handleAddTask);
+        editTaskForm.addEventListener('submit', handleUpdateTask);
+        editTaskLeadSearchInput.addEventListener('input', handleEditLeadSearch);
+
 
         // --- Main Event Listener for Task List ---
         taskList.addEventListener('click', async (e) => {
@@ -281,6 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Update local data to prevent full re-render
                     const task = allTasks.find(t => t.id === taskId);
                     if(task) task.completed = completed;
+                    renderTasks(); // Re-render to apply styling changes
                 } catch (error) {
                     console.error('Error updating task completion:', error);
                     showToast('Failed to update task.', 'error');
@@ -289,20 +393,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Handle Edit Button
-            if (e.target.classList.contains('edit-task-btn')) {
+            if (e.target.closest('.edit-task-btn')) {
                 const task = allTasks.find(t => t.id === taskId);
-                if (task) renderTaskEditView(taskElement, task);
-                return;
-            }
-
-            // Handle Cancel Button
-            if (e.target.classList.contains('cancel-edit-btn')) {
-                renderTasks(); // Simple way to revert is to re-render all
+                if (task) openEditModal(task);
                 return;
             }
 
             // Handle Delete Button
-            if (e.target.classList.contains('delete-task-btn')) {
+            if (e.target.closest('.delete-task-btn')) {
                 if (confirm('Are you sure you want to delete this task?')) {
                     try {
                         const response = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
@@ -318,33 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 return;
-            }
-
-            // Handle Save Button
-            if (e.target.classList.contains('save-task-btn')) {
-                const updatedData = {
-                    title: taskElement.querySelector('.edit-task-title').value,
-                    details: taskElement.querySelector('.edit-task-details').value,
-                    due_date: taskElement.querySelector('.edit-task-due-date').value || null,
-                };
-
-                try {
-                    const response = await fetch(`/api/tasks/${taskId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updatedData)
-                    });
-
-                    if (response.ok) {
-                        showToast('Task updated!');
-                        await fetchTasks(); // Refresh list
-                    } else {
-                        showToast('Failed to update task.', 'error');
-                    }
-                } catch (error) {
-                    console.error('Error saving task:', error);
-                    showToast('An error occurred while saving.', 'error');
-                }
             }
         });
     };
