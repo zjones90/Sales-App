@@ -38,6 +38,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="mb-0">Lead Details</h1>
             <div class="d-flex gap-2">
+                <button id="hot-lead-toggle-btn" class="btn btn-outline-secondary" title="Toggle Hot Lead">
+                    <i class="fas fa-fire"></i>
+                </button>
                 <button type="submit" form="lead-form" class="btn btn-primary" title="Save Changes">
                     <i class="fas fa-save"></i><span class="ms-2 d-none d-md-inline">Save</span>
                 </button>
@@ -100,6 +103,17 @@
                                 <div class="col-md-6 mb-3">
                                     <label for="lead-status" class="form-label">Status</label>
                                     <select id="lead-status" name="status" class="form-select"></select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="lead-source" class="form-label">Lead Source</label>
+                                    <select id="lead-source" name="source" class="form-select">
+                                        <option>Other</option>
+                                        <option>Facebook</option>
+                                        <option>Website</option>
+                                        <option>Home Show</option>
+                                        <option>Referral</option>
+                                        <option>Doors</option>
+                                    </select>
                                 </div>
                             </div>
                              <div class="mt-4">

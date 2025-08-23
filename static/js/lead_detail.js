@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const leadFirstNameInput = document.getElementById('lead-first-name');
     const leadLastNameInput = document.getElementById('lead-last-name');
     const leadStatusSelect = document.getElementById('lead-status');
+    const leadSourceSelect = document.getElementById('lead-source');
     const leadCreatedAtEl = document.getElementById('lead-created-at');
     const leadPhoneInput = document.getElementById('lead-phone');
     const leadAddressInput = document.getElementById('lead-address');
@@ -36,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const adjustPinBtn = document.getElementById('adjust-pin-btn');
     const snoozeLeadBtn = document.getElementById('snooze-lead-btn');
     const viewOnMapBtn = document.getElementById('view-on-map-btn');
+    const hotLeadToggleButton = document.getElementById('hot-lead-toggle-btn');
 
     // --- Snooze Functionality ---
     const snoozeModalEl = document.getElementById('snooze-modal');
@@ -83,6 +85,31 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('An error occurred while snoozing.', 'error');
         } finally {
             snoozeModal.hide();
+        }
+    };
+
+    const toggleHotLead = async () => {
+        if (!currentLead) return;
+
+        const newHotStatus = !currentLead.is_hot;
+
+        try {
+            const response = await fetch(`/api/leads/${LEAD_ID}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_hot: newHotStatus }),
+            });
+
+            if (response.ok) {
+                currentLead = await response.json();
+                renderLeadData(); // Re-render to update button style
+                showToast(`Lead marked as ${newHotStatus ? 'hot' : 'not hot'}.`);
+            } else {
+                showToast('Failed to update hot status.', 'error');
+            }
+        } catch (error) {
+            console.error('Error toggling hot lead:', error);
+            showToast('An error occurred while updating.', 'error');
         }
     };
 
@@ -146,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         leadPhoneInput.value = currentLead.phone || '';
         leadAddressInput.value = currentLead.address?.full_address || '';
         leadStatusSelect.value = currentLead.status || 'New';
+        leadSourceSelect.value = currentLead.source || 'Other';
 
         // Display formatted created_at date
         const createdAtDateEl = leadCreatedAtEl.querySelector('span');
@@ -186,6 +214,15 @@ document.addEventListener('DOMContentLoaded', () => {
             viewOnMapBtn.style.display = 'inline-block';
         } else {
             viewOnMapBtn.style.display = 'none';
+        }
+
+        // Style hot lead button
+        if (currentLead.is_hot) {
+            hotLeadToggleButton.classList.add('btn-danger');
+            hotLeadToggleButton.classList.remove('btn-outline-secondary');
+        } else {
+            hotLeadToggleButton.classList.remove('btn-danger');
+            hotLeadToggleButton.classList.add('btn-outline-secondary');
         }
 
         // Render notes
@@ -316,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
             last_name: leadLastNameInput.value,
             phone: leadPhoneInput.value,
             status: leadStatusSelect.value,
+            source: leadSourceSelect.value,
             address: {
                 ...(currentLead.address || {}),
                 full_address: leadAddressInput.value
@@ -499,6 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
         snoozeLeadBtn.addEventListener('click', openSnoozeModal);
         confirmSnoozeBtn.addEventListener('click', confirmSnooze);
         addTaskForm.addEventListener('submit', handleAddLeadTask);
+        hotLeadToggleButton.addEventListener('click', toggleHotLead);
 
         document.getElementById('toggle-completed-tasks-btn').addEventListener('click', () => {
             showCompletedTasks = !showCompletedTasks;
