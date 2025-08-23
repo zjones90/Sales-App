@@ -96,7 +96,12 @@
                             </div>
                             <div class="mb-3">
                                 <label for="lead-address" class="form-label">Address</label>
-                                <input type="text" class="form-control" id="lead-address" name="address" autocomplete="off">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="lead-address" name="address" autocomplete="off">
+                                    <a id="get-directions-btn" href="#" class="btn btn-outline-secondary" title="Get Directions" target="_blank">
+                                        <i class="fas fa-directions"></i>
+                                    </a>
+                                </div>
                                 <div id="address-suggestions-detail" class="address-suggestions list-group"></div>
                             </div>
                             <div class="row">

@@ -216,6 +216,15 @@ document.addEventListener('DOMContentLoaded', () => {
             viewOnMapBtn.style.display = 'none';
         }
 
+        // Set up Get Directions link
+        const getDirectionsBtn = document.getElementById('get-directions-btn');
+        if (getDirectionsBtn && currentLead.address && currentLead.address.lat && currentLead.address.lng) {
+            getDirectionsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${currentLead.address.lat},${currentLead.address.lng}`;
+            getDirectionsBtn.style.display = 'inline-block';
+        } else if (getDirectionsBtn) {
+            getDirectionsBtn.style.display = 'none';
+        }
+
         // Style hot lead button
         if (currentLead.is_hot) {
             hotLeadToggleButton.classList.add('btn-danger');
