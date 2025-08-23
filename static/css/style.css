@@ -290,6 +290,20 @@ main {
     display: none; /* Hide cards when collapsed */
 }
 
+.kanban-column.collapsed h3 {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 150px; /* Adjust as needed */
+    justify-content: center; /* Center the text vertically */
+}
+
+.kanban-column.collapsed h3 .toggle-btn {
+    display: none;
+}
+
 /* Toast Notification Styles */
 #toast-container {
     position: fixed;

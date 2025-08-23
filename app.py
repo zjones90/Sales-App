@@ -235,5 +235,101 @@ def lead_detail_page(lead_id):
     # The actual data will be fetched by the frontend JS
     return render_template('lead_detail.html', lead_id=lead_id)
 
+@app.route('/tasks')
+def tasks_page():
+    return render_template('tasks.html')
+
+# --- Tasks API Endpoints ---
+
+TASKS_FILE = 'tasks.json'
+
+def get_tasks():
+    if not os.path.exists(TASKS_FILE):
+        return {}
+    with open(TASKS_FILE, 'r') as f:
+        content = f.read()
+        if not content:
+            return {}
+        return json.loads(content)
+
+def save_tasks(tasks):
+    with open(TASKS_FILE, 'w') as f:
+        json.dump(tasks, f, indent=4)
+
+@app.route('/api/tasks', methods=['GET'])
+def api_get_tasks():
+    tasks = get_tasks()
+    return jsonify(list(tasks.values()))
+
+@app.route('/api/tasks/<task_id>', methods=['GET'])
+def api_get_task(task_id):
+    tasks = get_tasks()
+    if task_id not in tasks:
+        abort(404, description="Task not found")
+    return jsonify(tasks[task_id])
+
+@app.route('/api/tasks', methods=['POST'])
+def api_create_task():
+    data = request.get_json()
+    if not data or 'title' not in data:
+        abort(400, description="Missing title in request body")
+
+    tasks = get_tasks()
+    new_id = str(uuid.uuid4())
+
+    new_task = {
+        'id': new_id,
+        'title': data['title'],
+        'details': data.get('details', ''),
+        'due_date': data.get('due_date'),
+        'lead_id': data.get('lead_id'),
+        'created_at': datetime.utcnow().isoformat(),
+        'completed': False
+    }
+
+    tasks[new_id] = new_task
+    save_tasks(tasks)
+
+    return jsonify(new_task), 201
+
+@app.route('/api/tasks/<task_id>', methods=['PUT'])
+def api_update_task(task_id):
+    data = request.get_json()
+    if not data:
+        abort(400, description="Invalid request body")
+
+    tasks = get_tasks()
+    if task_id not in tasks:
+        abort(404, description="Task not found")
+
+    task = tasks[task_id]
+    task['title'] = data.get('title', task['title'])
+    task['details'] = data.get('details', task['details'])
+    task['due_date'] = data.get('due_date', task['due_date'])
+    task['lead_id'] = data.get('lead_id', task['lead_id'])
+    task['completed'] = data.get('completed', task['completed'])
+
+    tasks[task_id] = task
+    save_tasks(tasks)
+
+    return jsonify(task)
+
+@app.route('/api/tasks/<task_id>', methods=['DELETE'])
+def api_delete_task(task_id):
+    tasks = get_tasks()
+    if task_id not in tasks:
+        abort(404, description="Task not found")
+
+    del tasks[task_id]
+    save_tasks(tasks)
+
+    return '', 204
+
+@app.route('/api/leads/<lead_id>/tasks', methods=['GET'])
+def api_get_lead_tasks(lead_id):
+    tasks = get_tasks()
+    lead_tasks = [task for task in tasks.values() if task.get('lead_id') == lead_id]
+    return jsonify(lead_tasks)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

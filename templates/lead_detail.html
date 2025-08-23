@@ -13,6 +13,33 @@
             padding: 2rem;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .lead-detail-header-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #333;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        .icon-btn:hover {
+            background: #e9e9e9;
         }
         .communication-buttons a {
             display: inline-block;
@@ -87,12 +114,13 @@
             margin-bottom: .5rem;
             font-weight: bold;
         }
-        .lead-form-group input {
+        .lead-form-group input, .lead-form-group select {
             width: 100%;
             padding: .5rem;
             font-size: 1rem;
             border: 1px solid #ccc;
             border-radius: 4px;
+            background-color: white; /* Added for consistency */
         }
         .btn-save-lead {
             background-color: #28a745;
@@ -157,6 +185,39 @@
         #add-note-form button:hover {
             background-color: #218838;
         }
+        .tasks-log {
+            margin-top: 2rem;
+        }
+
+        .tasks-log h3 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+
+        .tasks-log ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .tasks-log li {
+            background: #f9f9f9;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #add-task-form {
+            margin-top: 1.5rem;
+            display: flex;
+        }
+
+        #add-task-form input {
+            flex-grow: 1;
+            margin-right: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -165,10 +226,23 @@
         <nav>
             <a href="/">Map</a>
             <a href="/leads">Leads</a>
+            <a href="/tasks">Tasks</a>
         </nav>
     </header>
     <main>
         <div id="lead-detail-container" class="lead-detail-container">
+            <div class="lead-detail-header-actions">
+                <button type="submit" form="lead-form" class="icon-btn" title="Save Changes">💾</button>
+                <button id="snooze-lead-btn" type="button" class="icon-btn" title="Snooze Lead">💤</button>
+                <a id="view-on-map-btn" href="#" class="icon-btn" title="View on Map">🗺️</a>
+                <button id="adjust-pin-btn" type="button" class="icon-btn" title="Adjust pin to match address">📍</button>
+                <div class="more-dropdown">
+                    <button type="button" class="icon-btn btn-more">☰</button>
+                    <div class="more-dropdown-content">
+                        <a href="#" id="delete-lead-btn">Delete Lead</a>
+                    </div>
+                </div>
+            </div>
             <form id="lead-form">
                 <div class="lead-form-group">
                     <label for="lead-first-name">First Name</label>
@@ -201,21 +275,12 @@
                 </div>
 
                 <div class="communication-buttons">
-                    <a id="call-btn" href="#">Call</a>
-                    <a id="text-btn" href="#">Text</a>
+                    <a id="call-btn" href="#" class="icon-btn" title="Call">📞</a>
+                    <a id="text-btn" href="#" class="icon-btn" title="Text">💬</a>
                 </div>
 
                 <div class="lead-actions">
-                    <button type="submit" class="btn-save-lead">Save Changes</button>
-                    <button id="snooze-lead-btn" type="button" class="btn-save-lead" style="background-color: #17a2b8;">Snooze</button>
-                    <a id="view-on-map-btn" href="#" class="btn-save-lead" style="background-color: #6c757d; text-decoration: none;" target="_blank">View on Map</a>
-                    <button id="adjust-pin-btn" type="button" class="btn-save-lead" style="background-color: #ffc107; color: black;">Adjust Pin to Match Address</button>
-                    <div class="more-dropdown">
-                        <button type="button" class="btn-more">More</button>
-                        <div class="more-dropdown-content">
-                            <a href="#" id="delete-lead-btn">Delete Lead</a>
-                        </div>
-                    </div>
+                    <a href="/leads" class="btn-save-lead" style="background-color: #6c757d; text-decoration: none;">Back to Leads</a>
                 </div>
             </form>
 
@@ -229,6 +294,15 @@
                         <input type="file" id="note-attachment" name="attachment">
                     </div>
                     <button type="submit">Add Note</button>
+                </form>
+            </div>
+
+            <div class="tasks-log">
+                <h3>Tasks</h3>
+                <ul id="tasks-list"></ul>
+                <form id="add-task-form">
+                    <input type="text" id="task-title" placeholder="New task title..." required>
+                    <button type="submit">Add Task</button>
                 </form>
             </div>
         </div>

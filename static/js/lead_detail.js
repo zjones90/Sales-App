@@ -92,6 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentLead = null;
     let statuses = [];
+    let leadTasks = [];
+
+    const tasksListEl = document.getElementById('tasks-list');
+    const addTaskForm = document.getElementById('add-task-form');
+    const taskTitleInput = document.getElementById('task-title');
+
 
     // --- Data Fetching ---
     const fetchStatuses = async () => {
@@ -392,10 +398,66 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Initialization ---
+    const fetchLeadTasks = async () => {
+        try {
+            const response = await fetch(`/api/leads/${LEAD_ID}/tasks`);
+            if (!response.ok) throw new Error('Failed to fetch tasks');
+            leadTasks = await response.json();
+            renderLeadTasks();
+        } catch (error) {
+            console.error('Error fetching lead tasks:', error);
+        }
+    };
+
+    const renderLeadTasks = () => {
+        tasksListEl.innerHTML = '';
+        leadTasks.forEach(task => {
+            const li = document.createElement('li');
+            li.dataset.taskId = task.id;
+            li.innerHTML = `
+                <div>
+                    <input type="checkbox" ${task.completed ? 'checked' : ''}>
+                    <span>${task.title}</span>
+                </div>
+                <button class="delete-task-btn">🗑️</button>
+            `;
+            tasksListEl.appendChild(li);
+        });
+    };
+
+    const handleAddLeadTask = async (e) => {
+        e.preventDefault();
+        const title = taskTitleInput.value.trim();
+        if (!title) return;
+
+        const newTask = {
+            title,
+            lead_id: LEAD_ID,
+        };
+
+        try {
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newTask),
+            });
+            if (response.ok) {
+                await fetchLeadTasks();
+                taskTitleInput.value = '';
+            } else {
+                showToast('Failed to add task.', 'error');
+            }
+        } catch (error) {
+            console.error('Error adding task:', error);
+            showToast('An error occurred while adding the task.', 'error');
+        }
+    };
+
     const initializePage = async () => {
         // Fetch statuses first, then lead data
         await fetchStatuses();
         await fetchLeadData();
+        await fetchLeadTasks();
 
         // Add event listeners after data is loaded and elements are ready
         addNoteForm.addEventListener('submit', handleAddNote);
@@ -405,6 +467,42 @@ document.addEventListener('DOMContentLoaded', () => {
         snoozeLeadBtn.addEventListener('click', openSnoozeModal);
         confirmSnoozeBtn.addEventListener('click', confirmSnooze);
         cancelSnoozeBtn.addEventListener('click', closeSnoozeModal);
+        addTaskForm.addEventListener('submit', handleAddLeadTask);
+
+        tasksListEl.addEventListener('click', async (e) => {
+            if (e.target.matches('input[type="checkbox"]')) {
+                const taskId = e.target.closest('li').dataset.taskId;
+                const completed = e.target.checked;
+                try {
+                    const response = await fetch(`/api/tasks/${taskId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ completed }),
+                    });
+                    if (!response.ok) throw new Error('Failed to update task');
+                } catch (error) {
+                    console.error('Error updating task:', error);
+                    showToast('Failed to update task.', 'error');
+                }
+            } else if (e.target.matches('.delete-task-btn')) {
+                const taskId = e.target.closest('li').dataset.taskId;
+                if (confirm('Are you sure you want to delete this task?')) {
+                    try {
+                        const response = await fetch(`/api/tasks/${taskId}`, {
+                            method: 'DELETE',
+                        });
+                        if (response.ok) {
+                            await fetchLeadTasks();
+                        } else {
+                            showToast('Failed to delete task.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error deleting task:', error);
+                        showToast('An error occurred while deleting the task.', 'error');
+                    }
+                }
+            }
+        });
 
         leadAddressInput.addEventListener('input', (e) => {
             fetchAddressSuggestions(e.target.value, (suggestions) => {

@@ -9,9 +9,9 @@
  * @returns {string} A formatted address string.
  */
 function formatAddress(addr) {
+    const streetPart = [addr.house_number, addr.road].filter(c => c).join(' ');
     const components = [
-        addr.house_number,
-        addr.road,
+        streetPart,
         addr.city || addr.town || addr.village,
         addr.state,
         addr.postcode
