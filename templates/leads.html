@@ -48,6 +48,25 @@
             margin-top: 20px;
             text-align: right;
         }
+        #add-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        #add-form label {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+        #add-form input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-field-full-width {
+            grid-column: 1 / -1;
+        }
     </style>
 </head>
 <body>
@@ -79,14 +98,24 @@
             <form id="add-form">
                 <input type="hidden" id="add-lat">
                 <input type="hidden" id="add-lng">
-                <label for="add-name">Name:</label>
-                <input type="text" id="add-name" required>
-                <label for="add-phone">Phone:</label>
-                <input type="tel" id="add-phone">
-                <label for="add-address">Address:</label>
-                <input type="text" id="add-address" required>
-                <div id="address-suggestions"></div>
-                 <div class="modal-actions">
+                <div class="form-field">
+                    <label for="add-first-name">First Name:</label>
+                    <input type="text" id="add-first-name" required>
+                </div>
+                <div class="form-field">
+                    <label for="add-last-name">Last Name:</label>
+                    <input type="text" id="add-last-name">
+                </div>
+                <div class="form-field form-field-full-width">
+                    <label for="add-phone">Phone:</label>
+                    <input type="tel" id="add-phone">
+                </div>
+                <div class="form-field form-field-full-width">
+                    <label for="add-address">Address:</label>
+                    <input type="text" id="add-address" required>
+                    <div id="address-suggestions"></div>
+                </div>
+                 <div class="modal-actions form-field-full-width">
                     <button type="submit" class="btn-save">Save Lead</button>
                     <button type="button" class="btn-cancel" id="cancel-add-modal">Cancel</button>
                 </div>
@@ -94,5 +123,25 @@
         </div>
     </div>
     <script src="/static/js/leads.js"></script>
+
+    <!-- Snooze Modal -->
+    <div id="snooze-modal" class="modal-backdrop" style="display:none;">
+        <div class="modal-content">
+            <h3>Snooze Lead</h3>
+            <p>Snooze for a number of days, or until a specific date.</p>
+            <div class="lead-form-group">
+                <label for="snooze-days">Snooze for (days):</label>
+                <input type="number" id="snooze-days" min="1" placeholder="e.g., 7">
+            </div>
+            <div class="lead-form-group">
+                <label for="snooze-date">Snooze until:</label>
+                <input type="date" id="snooze-date">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-save" id="confirm-snooze-btn">Snooze</button>
+                <button type="button" class="btn-cancel" id="cancel-snooze-modal">Cancel</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
