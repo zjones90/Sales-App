@@ -125,30 +125,28 @@ body {
 }
 
 .kanban-column.collapsed h3 {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    transform: rotate(180deg);
     white-space: nowrap;
     height: 100%;
     width: 55px;
-    justify-content: flex-end; /* Align items to the "bottom" (visually top) */
+    justify-content: flex-end;
     align-items: center;
     padding: 1rem 0;
     margin-bottom: 0;
     border-bottom: none;
     border-radius: .25rem;
-    display: flex; /* Ensure flex properties apply */
-    flex-direction: column-reverse; /* Stack items and reverse their order */
+    display: flex;
+    flex-direction: column-reverse;
 }
 
 .kanban-column.collapsed .column-title {
-    transform: none; /* No double rotation */
-    margin-top: 0.5rem; /* Add some space between count and title */
+    transform: rotate(-90deg);
+    margin-bottom: 1.5rem; /* Space between rotated title and count */
+    white-space: nowrap;
 }
 
 .kanban-column.collapsed .lead-count {
-    transform: none; /* Remove counter-rotation */
-    margin-bottom: auto; /* Pushes the count to the "top" */
+    transform: none;
+    margin-bottom: auto; /* Pushes the count to the top */
 }
 
 .kanban-column.collapsed .lead-card {
@@ -166,6 +164,15 @@ body {
     -webkit-line-clamp: 4; /* Limit to 4 lines */
     -webkit-box-orient: vertical;
     white-space: normal; /* Override any white-space settings */
+}
+
+/* Style for the active state of icon-based toggle buttons */
+#show-completed-tasks-toggle.active,
+#hot-leads-filter-btn.active,
+#show-snoozed-btn.active {
+    background-color: #0d6efd; /* Bootstrap primary blue */
+    color: white;
+    border-color: #0d6efd;
 }
 
 .lead-card.dragging {
