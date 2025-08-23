@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const showCompletedCheckbox = document.getElementById('show-completed-tasks-checkbox');
     const taskList = document.querySelector('.task-list');
     const addTaskForm = document.getElementById('add-task-form');
+    const addTaskFab = document.getElementById('add-task-fab');
+    const addTaskModalEl = document.getElementById('add-task-modal');
+    const addTaskModal = new bootstrap.Modal(addTaskModalEl);
     const taskTitleInput = document.getElementById('task-title');
     const taskDetailsInput = document.getElementById('task-details');
     const taskDueDateInput = document.getElementById('task-due-date');
@@ -90,6 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 case 'overdue':
                     filterMatch = task.due_date && !task.completed && new Date(task.due_date) < today;
+                    break;
+                case 'no_due_date':
+                    filterMatch = !task.due_date;
                     break;
                 case 'all_tasks':
                     filterMatch = true;
@@ -248,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (response.ok) {
                 showToast('Task added successfully!');
+                addTaskModal.hide();
                 addTaskForm.reset();
                 taskLeadIdInput.value = ''; // Clear hidden field
                 await fetchTasks(); // Refresh the list
@@ -361,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showCompletedCheckbox.addEventListener('change', renderTasks);
         taskLeadSearchInput.addEventListener('input', handleLeadSearch);
         addTaskForm.addEventListener('submit', handleAddTask);
+        addTaskFab.addEventListener('click', () => addTaskModal.show());
         editTaskForm.addEventListener('submit', handleUpdateTask);
         editTaskLeadSearchInput.addEventListener('input', handleEditLeadSearch);
 
