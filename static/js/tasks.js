@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const taskSearchInput = document.getElementById('task-search-input');
     const taskFilterSelect = document.getElementById('task-filter-select');
+    const showCompletedCheckbox = document.getElementById('show-completed-tasks-checkbox');
     const taskList = document.querySelector('.task-list');
     const addTaskForm = document.getElementById('add-task-form');
     const taskTitleInput = document.getElementById('task-title');
@@ -63,63 +64,96 @@ document.addEventListener('DOMContentLoaded', () => {
         taskList.innerHTML = '';
         const query = taskSearchInput.value.toLowerCase();
         const filter = taskFilterSelect.value;
+        const showCompleted = showCompletedCheckbox.checked;
 
         let filteredTasks = allTasks.filter(task => {
+            if (!showCompleted && task.completed) {
+                return false;
+            }
+
             const leadName = getLeadName(task.lead_id).toLowerCase();
             const searchMatch = (
                 task.title.toLowerCase().includes(query) ||
-                task.details.toLowerCase().includes(query) ||
+                (task.details && task.details.toLowerCase().includes(query)) ||
                 leadName.includes(query)
             );
 
             if (!searchMatch) return false;
 
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
             switch (filter) {
-                case 'due_date':
-                    return !!task.due_date;
-                case 'no_due_date':
-                    return !task.due_date;
-                case 'created_at':
-                    return true;
+                case 'due_today':
+                    if (!task.due_date) return false;
+                    const dueDate = new Date(task.due_date);
+                    dueDate.setDate(dueDate.getDate() + 1);
+                    return dueDate.toDateString() === today.toDateString();
+                case 'overdue':
+                    if (!task.due_date || task.completed) return false;
+                    return new Date(task.due_date) < today;
+                case 'all_tasks':
+                    return true; // No additional filtering
+                case 'all': // "All Active"
                 default:
-                    return true;
+                    return !task.completed;
             }
         });
 
-        if (filter === 'due_date') {
-            filteredTasks.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-        } else if (filter === 'created_at') {
-            filteredTasks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        // Sort tasks by due date by default, putting tasks without a due date at the end
+        filteredTasks.sort((a, b) => {
+            if (a.completed !== b.completed) {
+                return a.completed ? 1 : -1;
+            }
+            const dateA = a.due_date ? new Date(a.due_date) : null;
+            const dateB = b.due_date ? new Date(b.due_date) : null;
+            if (dateA && dateB) {
+                return dateA - dateB;
+            }
+            if (dateA) return -1; // a has date, b doesn't
+            if (dateB) return 1;  // b has date, a doesn't
+            return 0; // both have no date
+        });
+
+
+        if (filteredTasks.length === 0) {
+            taskList.innerHTML = '<p class="text-center text-muted">No tasks match the current filters.</p>';
         }
 
         filteredTasks.forEach(task => {
             const taskElement = document.createElement('div');
-            taskElement.className = 'card task-item mb-3';
+            const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !task.completed;
+            taskElement.className = `task-item list-group-item d-flex justify-content-between align-items-center ${task.completed ? 'completed' : ''} ${isOverdue ? 'overdue' : ''}`;
             taskElement.dataset.taskId = task.id;
+
+            let dueDateStr = 'No due date';
+            let dueDateClass = 'text-muted';
+            if (task.due_date) {
+                const dueDate = new Date(task.due_date);
+                dueDate.setDate(dueDate.getDate() + 1);
+                dueDateStr = dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                if (isOverdue) {
+                    dueDateClass = 'text-danger fw-bold';
+                }
+            }
+
+            const leadName = getLeadName(task.lead_id);
+
             taskElement.innerHTML = `
-                <div class="card-body">
-                    <div class="d-flex w-100 justify-content-between">
-                        <div>
-                            <h5 class="mb-1 task-title">${task.title}</h5>
-                            <p class="mb-1 task-details">${task.details || ''}</p>
-                        </div>
-                        <div class="task-actions">
-                            <button class="btn btn-sm btn-outline-primary edit-task-btn">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger delete-task-btn">Delete</button>
-                        </div>
+                <div class="d-flex align-items-center">
+                    <input class="form-check-input task-completed-checkbox me-3" type="checkbox" ${task.completed ? 'checked' : ''} id="task-${task.id}">
+                    <div>
+                        <h6 class="mb-0 task-title">${task.title}</h6>
+                        <small class="task-lead">
+                            <a href="/leads/${task.lead_id}" class="text-decoration-none">${leadName}</a>
+                        </small>
                     </div>
-                    <div class="d-flex w-100 justify-content-between align-items-center mt-2">
-                        <div>
-                            <small class="task-due-date">Due: ${task.due_date ? new Date(task.due_date + 'T00:00:00').toLocaleDateString() : 'N/A'}</small>
-                            <br>
-                            <small class="task-lead">Lead: <a href="/leads/${task.lead_id}">${getLeadName(task.lead_id)}</a></small>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input task-completed-checkbox" type="checkbox" ${task.completed ? 'checked' : ''} id="task-${task.id}">
-                            <label class="form-check-label" for="task-${task.id}">
-                                Completed
-                            </label>
-                        </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <small class="task-due-date me-3 ${dueDateClass}">${dueDateStr}</small>
+                    <div class="task-actions">
+                        <button class="btn btn-sm btn-outline-secondary edit-task-btn"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="btn btn-sm btn-outline-danger delete-task-btn"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </div>
             `;
@@ -224,6 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await fetchTasks();
         taskSearchInput.addEventListener('input', renderTasks);
         taskFilterSelect.addEventListener('change', renderTasks);
+        showCompletedCheckbox.addEventListener('change', renderTasks);
         taskLeadSearchInput.addEventListener('input', handleLeadSearch);
         addTaskForm.addEventListener('submit', handleAddTask);
 

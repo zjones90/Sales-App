@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             column.querySelectorAll('.lead-card').forEach(card => card.remove());
             const leadCountEl = column.querySelector('.lead-count');
             if (leadCountEl) {
-                leadCountEl.textContent = '(0)';
+                leadCountEl.textContent = '0';
             }
         });
 
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const count = column.querySelectorAll('.lead-card').length;
             const leadCountEl = column.querySelector('.lead-count');
             if (leadCountEl) {
-                leadCountEl.textContent = `(${count})`;
+                leadCountEl.textContent = count;
             }
         });
 

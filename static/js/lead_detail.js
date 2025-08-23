@@ -148,19 +148,22 @@ document.addEventListener('DOMContentLoaded', () => {
         leadStatusSelect.value = currentLead.status || 'New';
 
         // Display formatted created_at date
+        const createdAtDateEl = leadCreatedAtEl.querySelector('span');
         if (currentLead.created_at) {
             const date = new Date(currentLead.created_at);
-            leadCreatedAtEl.textContent = date.toLocaleString();
+            createdAtDateEl.textContent = date.toLocaleDateString();
         } else {
-            leadCreatedAtEl.textContent = 'N/A';
+            createdAtDateEl.textContent = 'N/A';
         }
 
         // Display snooze status
         const snoozeStatusContainer = document.getElementById('snooze-status-container');
         const snoozeStatusText = document.getElementById('snooze-status-text');
         if (currentLead.snooze_until && new Date(currentLead.snooze_until) > new Date()) {
-            const snoozeDate = new Date(currentLead.snooze_until).toLocaleString();
-            snoozeStatusText.textContent = `Snoozed until ${snoozeDate}`;
+            const snoozeDate = new Date(currentLead.snooze_until);
+            // Add one day to the date to display correctly
+            snoozeDate.setDate(snoozeDate.getDate() + 1);
+            snoozeStatusText.textContent = `Snoozed until ${snoozeDate.toLocaleDateString()}`;
             snoozeStatusContainer.style.display = 'block';
         } else {
             snoozeStatusContainer.style.display = 'none';
@@ -188,23 +191,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render notes
         notesListEl.innerHTML = '';
         if (currentLead.notes && Array.isArray(currentLead.notes)) {
-            currentLead.notes.forEach(note => {
+            currentLead.notes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(note => {
                 const li = document.createElement('li');
+                li.className = 'list-group-item';
                 li.dataset.noteId = note.id;
 
                 const noteDate = new Date(note.timestamp).toLocaleString();
-                let noteContent = `
-                    <div class="note-content">
+                const attachmentLink = note.attachment
+                    ? `<div class="mt-2"><a href="${note.attachment}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-paperclip"></i> View Attachment</a></div>`
+                    : '';
+
+                li.innerHTML = `
+                    <div class="note-bubble">
+                        <div class="note-actions">
+                            <button class="btn btn-sm btn-outline-secondary edit-note-btn"><i class="fas fa-pencil-alt"></i></button>
+                            <button class="btn btn-sm btn-outline-danger delete-note-btn"><i class="fas fa-trash-alt"></i></button>
+                        </div>
                         <p>${note.text}</p>
-                        <small>${noteDate}</small>
-                        ${note.attachment ? `<br><a href="${note.attachment}" target="_blank">View Attachment</a>` : ''}
-                    </div>
-                    <div class="note-actions">
-                        <button class="edit-note-btn">✏️</button>
-                        <button class="delete-note-btn">🗑️</button>
+                        ${attachmentLink}
+                        <div class="note-meta">
+                            <span>${noteDate}</span>
+                        </div>
                     </div>
                 `;
-                li.innerHTML = noteContent;
                 notesListEl.appendChild(li);
             });
         }

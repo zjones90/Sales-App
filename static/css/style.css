@@ -105,26 +105,45 @@ body {
 }
 
 .kanban-column .lead-count {
-    font-size: 0.9rem;
-    color: #6c757d;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fff;
+    background-color: #6c757d;
+    min-width: 24px;
+    height: 24px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    padding: 0 4px;
 }
 
 .kanban-column.collapsed {
-    width: 60px;
-    padding-top: 150px; /* Pushes cards down */
+    width: 55px;
+    cursor: default;
 }
 
 .kanban-column.collapsed h3 {
     padding-right: 0.5rem;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    height: 200px; /* Adjust as needed */
+    justify-content: flex-start;
+    align-items: center;
 }
 
 .kanban-column.collapsed .column-title {
-    transform: rotate(-90deg) translate(-100px, 0);
-    width: 100px; /* Give it a fixed width for rotation */
+    transform: none; /* Reset transform as we are using writing-mode */
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg); /* Counter-rotate the text */
+    margin-right: auto;
 }
 
 .kanban-column.collapsed .lead-count {
-    display: none; /* Hide count when collapsed */
+    display: none;
 }
 
 .kanban-column.collapsed .lead-card {
@@ -192,21 +211,42 @@ body {
 }
 
 /* Note Specific Styling */
-.note-content {
-    flex-grow: 1;
+#notes-list .list-group-item {
+    border: none;
+    background-color: transparent;
 }
-.note-content p {
+
+.note-bubble {
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    max-width: 85%;
+    margin-bottom: 0.5rem;
+    background-color: #e9ecef;
+    position: relative;
+}
+
+.note-bubble p {
     margin-bottom: 0.25rem;
-    white-space: pre-wrap; /* Respect line breaks in notes */
+    white-space: pre-wrap; /* Respects line breaks */
 }
-.note-content small {
+
+.note-bubble .note-meta {
+    font-size: 0.75rem;
     color: #6c757d;
+    align-self: flex-end;
 }
+
 .note-actions {
+    position: absolute;
+    top: 5px;
+    right: 10px;
     opacity: 0;
     transition: opacity 0.2s ease;
 }
-#notes-list .list-group-item:hover .note-actions {
+
+.note-bubble:hover .note-actions {
     opacity: 1;
 }
 
@@ -225,9 +265,28 @@ body {
     margin-top: 0;
 }
 
-.task-item.completed .task-title {
+.task-item.completed {
+    background-color: #f8f9fa;
+}
+
+.task-item.completed .task-title,
+.task-item.completed .task-lead a {
     text-decoration: line-through;
     color: #6c757d;
+}
+
+.task-item .task-actions {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.task-item:hover .task-actions {
+    opacity: 1;
+}
+
+.task-item.overdue .task-due-date {
+    color: #dc3545 !important;
+    font-weight: bold;
 }
 
 /* Make action buttons more visible and uniform */
