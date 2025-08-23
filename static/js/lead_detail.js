@@ -151,6 +151,17 @@ document.addEventListener('DOMContentLoaded', () => {
             leadCreatedAtEl.textContent = 'N/A';
         }
 
+        // Display snooze status
+        const snoozeStatusContainer = document.getElementById('snooze-status-container');
+        const snoozeStatusText = document.getElementById('snooze-status-text');
+        if (currentLead.snooze_until && new Date(currentLead.snooze_until) > new Date()) {
+            const snoozeDate = new Date(currentLead.snooze_until).toLocaleDateString();
+            snoozeStatusText.textContent = `Snoozed until ${snoozeDate}`;
+            snoozeStatusContainer.style.display = 'block';
+        } else {
+            snoozeStatusContainer.style.display = 'none';
+        }
+
         // Set up communication links
         if (currentLead.phone) {
             callBtn.href = `tel:${currentLead.phone}`;
@@ -394,6 +405,24 @@ document.addEventListener('DOMContentLoaded', () => {
         snoozeLeadBtn.addEventListener('click', openSnoozeModal);
         confirmSnoozeBtn.addEventListener('click', confirmSnooze);
         cancelSnoozeBtn.addEventListener('click', closeSnoozeModal);
+
+        leadAddressInput.addEventListener('input', (e) => {
+            fetchAddressSuggestions(e.target.value, (suggestions) => {
+                const suggestionsContainer = document.getElementById('address-suggestions-detail');
+                suggestionsContainer.innerHTML = '';
+                suggestions.forEach(place => {
+                    const div = document.createElement('div');
+                    div.textContent = place.displayName;
+                    div.className = 'suggestion-item'; // Make sure this class is styled
+                    div.addEventListener('click', () => {
+                        leadAddressInput.value = place.displayName;
+                        // The lat/lng will be updated when the user clicks "Adjust Pin to Match Address"
+                        suggestionsContainer.innerHTML = '';
+                    });
+                    suggestionsContainer.appendChild(div);
+                });
+            });
+        });
 
         notesListEl.addEventListener('click', (e) => {
             const editButton = e.target.closest('.edit-note-btn');

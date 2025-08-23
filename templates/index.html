@@ -168,8 +168,10 @@
             <form id="add-form">
                 <input type="hidden" id="add-lat">
                 <input type="hidden" id="add-lng">
-                <label for="add-name">Name:</label>
-                <input type="text" id="add-name" required>
+                <label for="add-first-name">First Name:</label>
+                <input type="text" id="add-first-name" required>
+                <label for="add-last-name">Last Name:</label>
+                <input type="text" id="add-last-name">
                 <label for="add-phone">Phone:</label>
                 <input type="tel" id="add-phone">
                 <label for="add-address">Address:</label>
@@ -214,7 +216,23 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
+    <!-- Shared Utilities -->
+    <script src="/static/js/utils.js"></script>
     <!-- App's Map JS -->
     <script src="/static/js/map.js"></script>
+
+    <!-- Pin Drag Modal -->
+    <div id="pin-drag-modal" class="modal-backdrop" style="display:none;">
+        <div class="modal-content">
+            <h3>Update Pin Location</h3>
+            <p>You moved the pin to a new location. What would you like to do?</p>
+            <p><strong>New Address:</strong> <span id="new-address-text"></span></p>
+            <div class="modal-actions">
+                <button type="button" id="pin-drag-cancel" class="btn-cancel">Cancel</button>
+                <button type="button" id="pin-drag-move-only" class="btn-save">Move Pin Only</button>
+                <button type="button" id="pin-drag-update-address" class="btn-save">Update Address & Move</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
