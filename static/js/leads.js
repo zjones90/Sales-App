@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let snoozeInfo = '';
         if (lead.snooze_until && new Date(lead.snooze_until) > new Date()) {
-            const snoozeDate = new Date(lead.snooze_until).toLocaleDateString();
+            const snoozeDate = new Date(lead.snooze_until).toLocaleString();
             snoozeInfo = `<p class="snooze-info card-text text-muted">Snoozed until ${snoozeDate}</p>`;
         }
 
@@ -185,8 +185,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return searchMatch && snoozeMatch && dateMatch;
         });
 
+        // Clear all cards and update counts
         document.querySelectorAll('.kanban-column').forEach(column => {
             column.querySelectorAll('.lead-card').forEach(card => card.remove());
+            const leadCountEl = column.querySelector('.lead-count');
+            if (leadCountEl) {
+                leadCountEl.textContent = '(0)';
+            }
         });
 
         let firstResultColumn = null;
@@ -202,7 +207,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        if (firstResultColumn) {
+        // Recalculate and display the count of visible cards in each column
+        document.querySelectorAll('.kanban-column').forEach(column => {
+            const count = column.querySelectorAll('.lead-card').length;
+            const leadCountEl = column.querySelector('.lead-count');
+            if (leadCountEl) {
+                leadCountEl.textContent = `(${count})`;
+            }
+        });
+
+        // Only scroll if there's a search query
+        if (query && firstResultColumn) {
             if (firstResultColumn.classList.contains('collapsed')) {
                 firstResultColumn.classList.remove('collapsed');
             }
@@ -249,9 +264,11 @@ document.addEventListener('DOMContentLoaded', () => {
             column.dataset.status = status;
 
             const header = document.createElement('h3');
-            header.innerHTML = `<span>${status}</span> <span class="toggle-btn">‹</span>`;
+            header.innerHTML = `<span class="column-title">${status}</span> <span class="lead-count"></span>`;
             header.addEventListener('click', () => {
                 column.classList.toggle('collapsed');
+                // After collapsing/expanding, the board might need to be re-rendered
+                // if some visual logic depends on the collapsed state, but for now it's fine.
             });
 
             column.appendChild(header);

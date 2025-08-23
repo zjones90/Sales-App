@@ -77,19 +77,54 @@ body {
     padding: 1rem;
     width: 300px;
     flex-shrink: 0;
-    transition: width 0.3s ease;
-}
-
-.kanban-column.collapsed {
-    width: 40px;
+    transition: all 0.3s ease;
 }
 
 .kanban-column h3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     cursor: pointer;
+    user-select: none; /* Prevents text selection */
+    padding: 0.5rem;
+    margin: -1rem -1rem 1rem -1rem; /* Expand clickable area */
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f1f3f5;
+    transition: background-color 0.2s ease;
 }
 
-.kanban-column.collapsed h3 .toggle-btn {
-    transform: rotate(180deg);
+.kanban-column h3:hover {
+    background-color: #e6e9ed;
+}
+
+.kanban-column .column-title {
+    transition: transform 0.3s ease;
+    transform-origin: left center;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.kanban-column .lead-count {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.kanban-column.collapsed {
+    width: 60px;
+    padding-top: 150px; /* Pushes cards down */
+}
+
+.kanban-column.collapsed h3 {
+    padding-right: 0.5rem;
+}
+
+.kanban-column.collapsed .column-title {
+    transform: rotate(-90deg) translate(-100px, 0);
+    width: 100px; /* Give it a fixed width for rotation */
+}
+
+.kanban-column.collapsed .lead-count {
+    display: none; /* Hide count when collapsed */
 }
 
 .kanban-column.collapsed .lead-card {
@@ -141,30 +176,82 @@ body {
     background-color: #f8f9fa;
 }
 
-.activity-log-item, .task-item {
+/* General List Item Styling */
+#notes-list, #tasks-list {
+    border-top: 1px solid #dee2e6;
+}
+
+#notes-list .list-group-item, #tasks-list .list-group-item {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    transition: background-color 0.2s ease;
+}
+
+#notes-list .list-group-item:hover, #tasks-list .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Note Specific Styling */
+.note-content {
+    flex-grow: 1;
+}
+.note-content p {
+    margin-bottom: 0.25rem;
+    white-space: pre-wrap; /* Respect line breaks in notes */
+}
+.note-content small {
+    color: #6c757d;
+}
+.note-actions {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+#notes-list .list-group-item:hover .note-actions {
+    opacity: 1;
+}
+
+/* Task Specific Styling */
+.task-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
+.task-actions {
+    white-space: nowrap;
+}
+
+.task-item .form-check-input {
+    margin-top: 0;
+}
+
+.task-item.completed .task-title {
+    text-decoration: line-through;
+    color: #6c757d;
+}
+
+/* Make action buttons more visible and uniform */
 .note-actions button, .task-actions button {
     background: none;
     border: none;
     color: #6c757d;
     cursor: pointer;
-    padding: 0;
+    padding: 0.25rem 0.5rem;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
 }
 
 .note-actions button:hover, .task-actions button:hover {
     color: #343a40;
+    opacity: 1;
 }
 
-#notes-list .list-group-item, #tasks-list .list-group-item {
-    border-left: 0;
-    border-right: 0;
-    border-radius: 0;
+/* Styling for the inline edit view */
+.edit-task-view {
+    animation: fadeIn 0.3s ease;
 }
 
-#notes-list .list-group-item:first-child, #tasks-list .list-group-item:first-child {
-    border-top: 0;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

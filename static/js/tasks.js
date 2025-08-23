@@ -1,7 +1,34 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Toast Notification Function ---
+    const showToast = (message, type = 'success') => {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => container.removeChild(toast), 300);
+        }, 3000);
+    };
+
+    // --- DOM Elements ---
     const taskSearchInput = document.getElementById('task-search-input');
     const taskFilterSelect = document.getElementById('task-filter-select');
     const taskList = document.querySelector('.task-list');
+    const addTaskForm = document.getElementById('add-task-form');
+    const taskTitleInput = document.getElementById('task-title');
+    const taskDetailsInput = document.getElementById('task-details');
+    const taskDueDateInput = document.getElementById('task-due-date');
+    const taskLeadSearchInput = document.getElementById('task-lead-search');
+    const taskLeadIdInput = document.getElementById('task-lead-id');
+    const leadSuggestionsEl = document.getElementById('lead-suggestions');
 
     let allTasks = [];
     let allLeads = [];
@@ -68,27 +95,146 @@ document.addEventListener('DOMContentLoaded', () => {
         filteredTasks.forEach(task => {
             const taskElement = document.createElement('div');
             taskElement.className = 'card task-item mb-3';
+            taskElement.dataset.taskId = task.id;
             taskElement.innerHTML = `
                 <div class="card-body">
                     <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">${task.title}</h5>
-                        <small>Due: ${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}</small>
+                        <div>
+                            <h5 class="mb-1 task-title">${task.title}</h5>
+                            <p class="mb-1 task-details">${task.details || ''}</p>
+                        </div>
+                        <div class="task-actions">
+                            <button class="btn btn-sm btn-outline-primary edit-task-btn">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger delete-task-btn">Delete</button>
+                        </div>
                     </div>
-                    <p class="mb-1">${task.details}</p>
-                    <small>Lead: ${getLeadName(task.lead_id)}</small>
-                    <div class="form-check mt-2">
-                        <input class="form-check-input" type="checkbox" ${task.completed ? 'checked' : ''} data-task-id="${task.id}" id="task-${task.id}">
-                        <label class="form-check-label" for="task-${task.id}">
-                            Completed
-                        </label>
+                    <div class="d-flex w-100 justify-content-between align-items-center mt-2">
+                        <div>
+                            <small class="task-due-date">Due: ${task.due_date ? new Date(task.due_date + 'T00:00:00').toLocaleDateString() : 'N/A'}</small>
+                            <br>
+                            <small class="task-lead">Lead: <a href="/leads/${task.lead_id}">${getLeadName(task.lead_id)}</a></small>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input task-completed-checkbox" type="checkbox" ${task.completed ? 'checked' : ''} id="task-${task.id}">
+                            <label class="form-check-label" for="task-${task.id}">
+                                Completed
+                            </label>
+                        </div>
                     </div>
                 </div>
             `;
             taskList.appendChild(taskElement);
+        });
+    };
 
-            const checkbox = taskElement.querySelector('input[type="checkbox"]');
-            checkbox.addEventListener('change', async (e) => {
-                const taskId = e.target.dataset.taskId;
+    const handleLeadSearch = (e) => {
+        const query = e.target.value.toLowerCase();
+        leadSuggestionsEl.innerHTML = '';
+        if (!query) {
+            taskLeadIdInput.value = ''; // Clear hidden input if search is cleared
+            return;
+        }
+
+        const matchingLeads = allLeads.filter(lead => {
+            const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.toLowerCase();
+            return fullName.includes(query) ||
+                   lead.phone?.toLowerCase().includes(query) ||
+                   lead.address?.full_address?.toLowerCase().includes(query);
+        });
+
+        matchingLeads.slice(0, 5).forEach(lead => {
+            const div = document.createElement('div');
+            div.className = 'list-group-item list-group-item-action';
+            div.textContent = `${lead.first_name} ${lead.last_name} - ${lead.address.full_address}`;
+            div.addEventListener('click', () => {
+                taskLeadSearchInput.value = `${lead.first_name} ${lead.last_name}`;
+                taskLeadIdInput.value = lead.id;
+                leadSuggestionsEl.innerHTML = '';
+            });
+            leadSuggestionsEl.appendChild(div);
+        });
+    };
+
+    const handleAddTask = async (e) => {
+        e.preventDefault();
+        const newTask = {
+            title: taskTitleInput.value,
+            details: taskDetailsInput.value,
+            due_date: taskDueDateInput.value || null,
+            lead_id: taskLeadIdInput.value || null,
+        };
+
+        if (!newTask.title) {
+            showToast('Task title is required.', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newTask),
+            });
+            if (response.ok) {
+                showToast('Task added successfully!');
+                addTaskForm.reset();
+                taskLeadIdInput.value = ''; // Clear hidden field
+                await fetchTasks(); // Refresh the list
+            } else {
+                showToast('Failed to add task.', 'error');
+            }
+        } catch (error) {
+            console.error('Error adding task:', error);
+            showToast('An error occurred while adding the task.', 'error');
+        }
+    };
+
+    const renderTaskEditView = (taskElement, task) => {
+        // Simple and safe way to create the form elements
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.className = 'form-control mb-2 edit-task-title';
+        titleInput.value = task.title;
+
+        const detailsTextarea = document.createElement('textarea');
+        detailsTextarea.className = 'form-control mb-2 edit-task-details';
+        detailsTextarea.rows = 2;
+        detailsTextarea.value = task.details || '';
+
+        const dueDateInput = document.createElement('input');
+        dueDateInput.type = 'date';
+        dueDateInput.className = 'form-control edit-task-due-date';
+        dueDateInput.value = task.due_date ? task.due_date.split('T')[0] : '';
+
+        // Replace view elements with inputs
+        taskElement.querySelector('.task-title').replaceWith(titleInput);
+        taskElement.querySelector('.task-details').replaceWith(detailsTextarea);
+        taskElement.querySelector('.task-due-date').replaceWith(dueDateInput);
+
+        // Change buttons to Save/Cancel
+        const actionsContainer = taskElement.querySelector('.task-actions');
+        actionsContainer.innerHTML = `
+            <button class="btn btn-sm btn-success save-task-btn">Save</button>
+            <button class="btn btn-sm btn-secondary cancel-edit-btn">Cancel</button>
+        `;
+    };
+
+    const initializeTasksPage = async () => {
+        await fetchLeads();
+        await fetchTasks();
+        taskSearchInput.addEventListener('input', renderTasks);
+        taskFilterSelect.addEventListener('change', renderTasks);
+        taskLeadSearchInput.addEventListener('input', handleLeadSearch);
+        addTaskForm.addEventListener('submit', handleAddTask);
+
+        // --- Main Event Listener for Task List ---
+        taskList.addEventListener('click', async (e) => {
+            const taskElement = e.target.closest('.task-item');
+            if (!taskElement) return;
+            const taskId = taskElement.dataset.taskId;
+
+            // Handle Checkbox Change
+            if (e.target.classList.contains('task-completed-checkbox')) {
                 const completed = e.target.checked;
                 try {
                     const response = await fetch(`/api/tasks/${taskId}`, {
@@ -97,18 +243,75 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ completed }),
                     });
                     if (!response.ok) throw new Error('Failed to update task');
+                    // Update local data to prevent full re-render
+                    const task = allTasks.find(t => t.id === taskId);
+                    if(task) task.completed = completed;
                 } catch (error) {
-                    console.error('Error updating task:', error);
+                    console.error('Error updating task completion:', error);
+                    showToast('Failed to update task.', 'error');
                 }
-            });
-        });
-    };
+                return;
+            }
 
-    const initializeTasksPage = async () => {
-        await fetchLeads();
-        await fetchTasks();
-        taskSearchInput.addEventListener('input', renderTasks);
-        taskFilterSelect.addEventListener('change', renderTasks);
+            // Handle Edit Button
+            if (e.target.classList.contains('edit-task-btn')) {
+                const task = allTasks.find(t => t.id === taskId);
+                if (task) renderTaskEditView(taskElement, task);
+                return;
+            }
+
+            // Handle Cancel Button
+            if (e.target.classList.contains('cancel-edit-btn')) {
+                renderTasks(); // Simple way to revert is to re-render all
+                return;
+            }
+
+            // Handle Delete Button
+            if (e.target.classList.contains('delete-task-btn')) {
+                if (confirm('Are you sure you want to delete this task?')) {
+                    try {
+                        const response = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+                        if (response.ok) {
+                            showToast('Task deleted.');
+                            fetchTasks(); // Refresh list
+                        } else {
+                            showToast('Failed to delete task.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error deleting task:', error);
+                        showToast('An error occurred while deleting.', 'error');
+                    }
+                }
+                return;
+            }
+
+            // Handle Save Button
+            if (e.target.classList.contains('save-task-btn')) {
+                const updatedData = {
+                    title: taskElement.querySelector('.edit-task-title').value,
+                    details: taskElement.querySelector('.edit-task-details').value,
+                    due_date: taskElement.querySelector('.edit-task-due-date').value || null,
+                };
+
+                try {
+                    const response = await fetch(`/api/tasks/${taskId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedData)
+                    });
+
+                    if (response.ok) {
+                        showToast('Task updated!');
+                        await fetchTasks(); // Refresh list
+                    } else {
+                        showToast('Failed to update task.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error saving task:', error);
+                    showToast('An error occurred while saving.', 'error');
+                }
+            }
+        });
     };
 
     initializeTasksPage();
