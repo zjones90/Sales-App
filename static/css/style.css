@@ -125,30 +125,42 @@ body {
 }
 
 .kanban-column.collapsed h3 {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    transform: rotate(180deg);
-    white-space: nowrap;
-    height: 100%;
-    width: 55px;
-    justify-content: flex-end; /* Align items to the "bottom" (visually top) */
-    align-items: center;
-    padding: 1rem 0;
-    margin-bottom: 0;
-    border-bottom: none;
-    border-radius: .25rem;
-    display: flex; /* Ensure flex properties apply */
-    flex-direction: column-reverse; /* Stack items and reverse their order */
+    /* Reset all the vertical text properties */
+    writing-mode: initial;
+    text-orientation: initial;
+    transform: none;
+    white-space: normal; /* Allow text to wrap if needed */
+
+    /* Layout */
+    display: flex;
+    flex-direction: column; /* Stack count and title vertically */
+    justify-content: center; /* Center content vertically inside the header */
+    align-items: center; /* Center content horizontally */
+
+    /* Sizing and Spacing */
+    height: auto; /* Auto height based on content */
+    width: 100%; /* Take full width of the collapsed column */
+    padding: 0.5rem 0.25rem; /* Adjust padding for smaller space */
+    margin: 0;
+
+    /* Borders and Background */
+    border-bottom: 1px solid #dee2e6;
+    border-radius: .25rem .25rem 0 0;
 }
 
 .kanban-column.collapsed .column-title {
-    transform: none; /* No double rotation */
-    margin-top: 0.5rem; /* Add some space between count and title */
+    transform: none; /* Reset transform */
+    margin-top: 0.25rem; /* Add space above title */
+    font-size: 0.75rem; /* Make font smaller */
+    line-height: 1;
+    text-align: center;
 }
 
 .kanban-column.collapsed .lead-count {
-    transform: none; /* Remove counter-rotation */
-    margin-bottom: auto; /* Pushes the count to the "top" */
+    transform: none; /* Reset transform */
+    margin-bottom: 0; /* Remove bottom margin */
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .kanban-column.collapsed .lead-card {
@@ -166,6 +178,15 @@ body {
     -webkit-line-clamp: 4; /* Limit to 4 lines */
     -webkit-box-orient: vertical;
     white-space: normal; /* Override any white-space settings */
+}
+
+/* Style for the active state of icon-based toggle buttons */
+#show-completed-tasks-toggle.active,
+#hot-leads-filter-btn.active,
+#show-snoozed-btn.active {
+    background-color: #0d6efd; /* Bootstrap primary blue */
+    color: white;
+    border-color: #0d6efd;
 }
 
 .lead-card.dragging {

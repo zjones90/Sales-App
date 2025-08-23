@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const taskSearchInput = document.getElementById('task-search-input');
     const taskFilterSelect = document.getElementById('task-filter-select');
-    const showCompletedCheckbox = document.getElementById('show-completed-tasks-checkbox');
+    const showCompletedToggle = document.getElementById('show-completed-tasks-toggle');
     const taskList = document.querySelector('.task-list');
     const addTaskForm = document.getElementById('add-task-form');
     const addTaskFab = document.getElementById('add-task-fab');
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         taskList.innerHTML = '';
         const query = taskSearchInput.value.toLowerCase();
         const filter = taskFilterSelect.value;
-        const showCompleted = showCompletedCheckbox.checked;
+        const showCompleted = showCompletedToggle.classList.contains('active');
 
         let filteredTasks = allTasks.filter(task => {
             // Filter by search query first
@@ -365,7 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
         await fetchTasks();
         taskSearchInput.addEventListener('input', renderTasks);
         taskFilterSelect.addEventListener('change', renderTasks);
-        showCompletedCheckbox.addEventListener('change', renderTasks);
+        showCompletedToggle.addEventListener('click', () => {
+            showCompletedToggle.classList.toggle('active');
+            renderTasks();
+        });
         taskLeadSearchInput.addEventListener('input', handleLeadSearch);
         addTaskForm.addEventListener('submit', handleAddTask);
         addTaskFab.addEventListener('click', () => addTaskModal.show());
