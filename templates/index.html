@@ -101,6 +101,24 @@
             cursor: pointer;
             z-index: 800;
         }
+        .custom-div-icon {
+            background: none;
+            border: none;
+        }
+        @keyframes pulsate {
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+        }
+        .user-location-marker {
+            width: 18px;
+            height: 18px;
+            background-color: #007bff;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            animation: pulsate 2s infinite;
+        }
     </style>
 </head>
 <body>
@@ -188,12 +206,5 @@
      crossorigin=""></script>
     <!-- App's Map JS -->
     <script src="/static/js/map.js"></script>
-    <script>
-        // Add event listener for the new FAB
-        document.getElementById('add-lead-fab').addEventListener('click', () => {
-            // Open the modal at the current center of the map
-            openAddModal(map.getCenter());
-        });
-    </script>
 </body>
 </html>
