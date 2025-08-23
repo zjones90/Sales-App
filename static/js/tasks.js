@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div class="card-body">
-                    <p class="card-text">${task.details || 'No details provided.'}</p>
+                    <p class="card-text task-details-clamp">${task.details || 'No details provided.'}</p>
                 </div>
                 <div class="card-footer d-flex justify-content-between align-items-center">
                     <small class="task-lead">

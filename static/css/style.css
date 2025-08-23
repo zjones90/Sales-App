@@ -131,27 +131,24 @@ body {
     white-space: nowrap;
     height: 100%;
     width: 55px;
-    justify-content: center;
+    justify-content: flex-end; /* Align items to the "bottom" (visually top) */
     align-items: center;
     padding: 1rem 0;
     margin-bottom: 0;
     border-bottom: none;
     border-radius: .25rem;
-    position: relative; /* Add relative positioning */
+    display: flex; /* Ensure flex properties apply */
+    flex-direction: column-reverse; /* Stack items and reverse their order */
 }
 
 .kanban-column.collapsed .column-title {
     transform: none; /* No double rotation */
-    margin-top: auto; /* Pushes the title to the "top" of the vertical line */
+    margin-top: 0.5rem; /* Add some space between count and title */
 }
 
 .kanban-column.collapsed .lead-count {
-    display: inline-flex; /* Show the count */
-    position: absolute;
-    top: 10px; /* Position at the top */
-    left: 50%;
-    transform: translateX(-50%) rotate(180deg); /* Counter-rotate and center */
-    z-index: 1;
+    transform: none; /* Remove counter-rotation */
+    margin-bottom: auto; /* Pushes the count to the "top" */
 }
 
 .kanban-column.collapsed .lead-card {
@@ -315,6 +312,21 @@ body {
     opacity: 1;
 }
 
+.task-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-list-item .task-actions {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.task-list-item:hover .task-actions {
+    opacity: 1;
+}
+
 .card-footer {
     background-color: #fff;
     border-top: 1px solid rgba(0,0,0,.125);
@@ -344,4 +356,13 @@ body {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+.task-details-clamp {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 5; /* Limit to 5 lines */
+    -webkit-box-orient: vertical;
+    white-space: normal; /* Override any white-space settings */
 }

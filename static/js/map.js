@@ -189,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addLastNameInput = document.getElementById('add-last-name');
     const addPhoneInput = document.getElementById('add-phone');
     const addAddressInput = document.getElementById('add-address');
+    const addLeadSourceInput = document.getElementById('add-lead-source');
 
     const editModalEl = document.getElementById('edit-modal');
     const editModal = new bootstrap.Modal(editModalEl);
@@ -481,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
             first_name: addFirstNameInput.value,
             last_name: addLastNameInput.value,
             phone: addPhoneInput.value,
+            source: addLeadSourceInput.value,
             address: {
                 lat: parseFloat(addLatInput.value),
                 lng: parseFloat(addLngInput.value),

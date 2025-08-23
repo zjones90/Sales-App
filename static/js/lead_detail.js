@@ -465,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tasksToRender.forEach(task => {
             const li = document.createElement('li');
-            li.className = 'list-group-item task-item';
+            li.className = 'list-group-item task-item task-list-item';
             li.dataset.taskId = task.id;
             li.innerHTML = `
                 <div class="d-flex align-items-center">
@@ -473,8 +473,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span>${task.title}</span>
                 </div>
                 <div class="task-actions">
-                    <button class="edit-task-btn btn btn-sm">✏️</button>
-                    <button class="delete-task-btn btn btn-sm">🗑️</button>
+                    <button class="edit-task-btn btn btn-sm btn-link text-secondary" title="Edit Task"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="delete-task-btn btn btn-sm btn-link text-danger" title="Delete Task"><i class="fas fa-trash-alt"></i></button>
                 </div>
             `;
             tasksListEl.appendChild(li);
