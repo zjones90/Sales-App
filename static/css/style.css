@@ -120,45 +120,35 @@ body {
 }
 
 .kanban-column.collapsed {
-    width: 55px;
+    width: 40px; /* A cleaner, tighter width */
     cursor: default;
+    padding: 0.5rem 0;
 }
 
 .kanban-column.collapsed h3 {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-align: left;
+    margin: 0;
+    padding: 0.5rem;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start; /* Align count to the top */
+    justify-content: space-between;
     align-items: center;
-    /* The column will stretch to the height of the tallest column.
-       This h3 should fill the column. */
     height: 100%;
     width: 100%;
-    padding: 1rem 0.25rem;
-    margin: 0;
     border-bottom: none;
-    border-radius: .25rem;
-    box-sizing: border-box; /* Ensure padding is included in height */
+    background-color: transparent;
 }
 
 .kanban-column.collapsed .column-title {
-    /* Rotate the text */
-    transform: rotate(-90deg);
-    white-space: nowrap;
-
-    /* Keep original font style */
     font-size: 1.1rem;
     font-weight: 600;
-
-    /* Center the rotated text block */
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    white-space: nowrap;
+    padding: 0.5rem 0; /* Give it some vertical padding */
 }
 
 .kanban-column.collapsed .lead-count {
-    margin-bottom: 1.5rem; /* Space between count and title block */
-    flex-shrink: 0; /* Prevent count from shrinking */
+    margin-right: 0.5rem; /* Space it from the edge */
 }
 
 .kanban-column.collapsed .lead-card {
