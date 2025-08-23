@@ -1,4 +1,2 @@
-Traceback (most recent call last):
-  File "/app/app.py", line 4, in <module>
-    from flask import Flask, jsonify, render_template, request, abort
-ModuleNotFoundError: No module named 'flask'
+ * Serving Flask app 'app'
+ * Debug mode: on
