@@ -184,7 +184,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const addForm = document.getElementById('add-form');
     const addLatInput = document.getElementById('add-lat');
     const addLngInput = document.getElementById('add-lng');
-    const addNameInput = document.getElementById('add-name');
+    const addFirstNameInput = document.getElementById('add-first-name');
+    const addLastNameInput = document.getElementById('add-last-name');
     const addPhoneInput = document.getElementById('add-phone');
     const addAddressInput = document.getElementById('add-address');
 
@@ -232,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newLatLng = marker.getLatLng();
         const oldLatLng = [lead.address.lat, lead.address.lng];
 
-        // 1. Reverse geocode the new location to show the user
+        // Reverse geocode the new location
         let newAddress = 'Address not found';
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${newLatLng.lat}&lon=${newLatLng.lng}`);
@@ -242,53 +243,73 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Reverse geocoding failed:', error);
-            // We can still proceed, but the user won't see the new address in the confirm dialog
         }
 
-        // 2. Ask for confirmation
-        const confirmed = confirm(`Update address to "${newAddress}"?`);
+        // Show the custom modal
+        const modal = document.getElementById('pin-drag-modal');
+        document.getElementById('new-address-text').textContent = newAddress;
+        modal.style.display = 'flex';
 
-        if (!confirmed) {
-            // Revert marker position if the user cancels
-            marker.setLatLng(oldLatLng);
-            return;
-        }
+        const cancelBtn = document.getElementById('pin-drag-cancel');
+        const moveOnlyBtn = document.getElementById('pin-drag-move-only');
+        const updateAddressBtn = document.getElementById('pin-drag-update-address');
 
-        // 3. Prepare the data for the API
-        const updatedData = {
-            address: {
-                lat: newLatLng.lat,
-                lng: newLatLng.lng,
-                full_address: newAddress
+        const closePinModal = () => {
+            modal.style.display = 'none';
+            // Clean up event listeners
+            cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+            moveOnlyBtn.replaceWith(moveOnlyBtn.cloneNode(true));
+            updateAddressBtn.replaceWith(updateAddressBtn.cloneNode(true));
+        };
+
+        const sendUpdate = async (updateAddress) => {
+            const updatedData = {
+                address: {
+                    lat: newLatLng.lat,
+                    lng: newLatLng.lng,
+                    full_address: updateAddress ? newAddress : lead.address.full_address
+                }
+            };
+
+            try {
+                marker.setPopupContent('Updating...').openPopup();
+                const response = await fetch(`/api/leads/${lead.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData)
+                });
+
+                if (response.ok) {
+                    const updatedLead = await response.json();
+                    allLeads[lead.id] = updatedLead;
+                    marker.leadData = updatedLead;
+                    showToast('Lead location updated!');
+                } else {
+                    marker.setLatLng(oldLatLng); // Revert on failure
+                    showToast('Failed to update lead location.', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating lead location:', error);
+                marker.setLatLng(oldLatLng); // Revert on error
+                showToast('An error occurred.', 'error');
+            } finally {
+                marker.setPopupContent(generatePopupContent(marker.leadData));
+                closePinModal();
             }
         };
 
-        // 4. Send the update to the server
-        try {
-            marker.setPopupContent('Updating address...').openPopup();
-            const response = await fetch(`/api/leads/${lead.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedData)
-            });
+        cancelBtn.addEventListener('click', () => {
+            marker.setLatLng(oldLatLng); // Revert position
+            closePinModal();
+        }, { once: true });
 
-            if (response.ok) {
-                const updatedLead = await response.json();
-                allLeads[lead.id] = updatedLead;
-                marker.leadData = updatedLead;
-                marker.setPopupContent(generatePopupContent(updatedLead));
-                showToast('Lead location updated!');
-            } else {
-                marker.setLatLng(oldLatLng);
-                marker.setPopupContent(generatePopupContent(lead));
-                showToast('Failed to update lead location.', 'error');
-            }
-        } catch (error) {
-            console.error('Error updating lead location:', error);
-            marker.setLatLng(oldLatLng);
-            marker.setPopupContent(generatePopupContent(lead));
-            showToast('An error occurred.', 'error');
-        }
+        moveOnlyBtn.addEventListener('click', () => {
+            sendUpdate(false); // Don't update address text
+        }, { once: true });
+
+        updateAddressBtn.addEventListener('click', () => {
+            sendUpdate(true); // Update address text
+        }, { once: true });
     };
 
     const updateMapFilters = () => {
@@ -379,7 +400,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const openAddModal = async (latlng) => {
         addLatInput.value = latlng.lat;
         addLngInput.value = latlng.lng;
-        addNameInput.value = '';
+        addFirstNameInput.value = '';
+        addLastNameInput.value = '';
         addPhoneInput.value = '';
         addAddressInput.value = 'Fetching address...';
         addModal.style.display = 'flex';
@@ -420,32 +442,23 @@ document.addEventListener('DOMContentLoaded', () => {
         editModal.style.display = 'none';
     };
 
-    addAddressInput.addEventListener('keyup', async (e) => {
-        const query = e.target.value;
-        if (query.length < 3) {
-            document.getElementById('address-suggestions').innerHTML = '';
-            return;
-        }
-
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
-            const suggestions = await response.json();
+    addAddressInput.addEventListener('input', (e) => {
+        fetchAddressSuggestions(e.target.value, (suggestions) => {
             const addressSuggestions = document.getElementById('address-suggestions');
             addressSuggestions.innerHTML = '';
             suggestions.forEach(place => {
                 const div = document.createElement('div');
-                div.textContent = place.display_name;
+                div.textContent = place.displayName;
+                div.className = 'suggestion-item';
                 div.addEventListener('click', () => {
-                    addAddressInput.value = place.display_name;
+                    addAddressInput.value = place.displayName;
                     addLatInput.value = place.lat;
-                    addLngInput.value = place.lon;
+                    addLngInput.value = place.lng;
                     addressSuggestions.innerHTML = '';
                 });
                 addressSuggestions.appendChild(div);
             });
-        } catch (error) {
-            console.error('Error fetching address suggestions:', error);
-        }
+        });
     });
 
     document.addEventListener('click', function(e) {
@@ -469,7 +482,8 @@ document.addEventListener('DOMContentLoaded', () => {
     addForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const newLead = {
-            name: addNameInput.value,
+            first_name: addFirstNameInput.value,
+            last_name: addLastNameInput.value,
             phone: addPhoneInput.value,
             address: {
                 lat: parseFloat(addLatInput.value),

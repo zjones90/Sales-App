@@ -257,29 +257,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const openAddModal = () => addModal.style.display = 'flex';
     const closeAddModal = () => addModal.style.display = 'none';
 
-    const handleAddAddressInput = async (e) => {
-        const query = e.target.value;
-        const suggestionsContainer = document.getElementById('address-suggestions');
-        suggestionsContainer.innerHTML = '';
-        if (query.length < 3) return;
-
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
-            const suggestions = await response.json();
+    const handleAddAddressInput = (e) => {
+        fetchAddressSuggestions(e.target.value, (suggestions) => {
+            const suggestionsContainer = document.getElementById('address-suggestions');
+            suggestionsContainer.innerHTML = '';
             suggestions.forEach(place => {
                 const div = document.createElement('div');
-                div.textContent = place.display_name;
+                div.textContent = place.displayName;
+                div.className = 'suggestion-item';
                 div.addEventListener('click', () => {
-                    document.getElementById('add-address').value = place.display_name;
+                    document.getElementById('add-address').value = place.displayName;
                     document.getElementById('add-lat').value = place.lat;
-                    document.getElementById('add-lng').value = place.lon;
+                    document.getElementById('add-lng').value = place.lng;
                     suggestionsContainer.innerHTML = '';
                 });
                 suggestionsContainer.appendChild(div);
             });
-        } catch (error) {
-            console.error('Error fetching address suggestions:', error);
-        }
+        });
     };
 
     const handleAddFormSubmit = async (e) => {

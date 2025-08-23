@@ -301,3 +301,21 @@ main {
 .toast.error {
     background-color: #dc3545;
 }
+
+/* Styles for address suggestion dropdowns */
+.address-suggestions {
+    position: relative;
+}
+
+.address-suggestions .suggestion-item, #search-suggestions .suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    z-index: 1001;
+}
+
+.address-suggestions .suggestion-item:hover, #search-suggestions .suggestion-item:hover {
+    background-color: #f0f0f0;
+}
