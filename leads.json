@@ -187,6 +187,24 @@
                 "text": "Test 34",
                 "timestamp": "2025-08-23T05:08:27.649903",
                 "attachment": null
+            },
+            {
+                "id": "870cdff1-b6e3-4bd4-9c79-624626b916a6",
+                "text": "Test1",
+                "timestamp": "2025-08-23T05:21:41.549931",
+                "attachment": null
+            },
+            {
+                "id": "7c338c55-8b08-4472-b1af-c8c98b3d56e6",
+                "text": "It looks like you're running into a couple of common issues with terminal commands. Here's a breakdown of what's happening and how to fix it.\r\n\r\n1. The pip install Command\r\nThe error bash: $: command not found happens because you included the dollar sign ($) when you typed the command.\r\n\r\nIn many tutorials and articles, the $ is used to represent the terminal prompt itself\u2014it's not part of the actual command you're supposed to type.\r\n\r\nIncorrect: $ pip install -r requirements.txt\r\n\r\nCorrect: pip install -r requirements.txt\r\n\r\nSimply run the command again without the leading $.",
+                "timestamp": "2025-08-23T05:22:10.769900",
+                "attachment": null
+            },
+            {
+                "id": "be013085-956d-4566-a0c1-5b6ca5669624",
+                "text": "It looks like you're running into a couple of common issues with terminal commands. Here's a breakdown of what's happening and how to fix it.\r\n\r\n1. The pip install Command\r\nThe error bash: $: command not found happens because you included the dollar sign ($) when you typed the command.\r\n\r\nIn many tutorials and articles, the $ is used to represent the terminal prompt itself\u2014it's not part of the actual command you're supposed to type.\r\n\r\nIncorrect: $ pip install -r requirements.txt\r\n\r\nCorrect: pip install -r requirements.txt\r\n\r\nSimply run the command again without the leading $.",
+                "timestamp": "2025-08-23T05:22:25.226042",
+                "attachment": "/uploads/15/Approval.png"
             }
         ],
         "status": "New",
