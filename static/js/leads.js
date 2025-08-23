@@ -25,7 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const startDateFilter = document.getElementById('start-date-filter');
     const endDateFilter = document.getElementById('end-date-filter');
     const addLeadFab = document.getElementById('add-lead-fab');
-    const addModal = document.getElementById('add-modal');
+    const addModalEl = document.getElementById('add-modal');
+    const addModal = new bootstrap.Modal(addModalEl);
     const addForm = document.getElementById('add-form');
 
     // --- App State ---
@@ -45,22 +46,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Snooze Functionality ---
-    const snoozeModal = document.getElementById('snooze-modal');
+    const snoozeModalEl = document.getElementById('snooze-modal');
+    const snoozeModal = new bootstrap.Modal(snoozeModalEl);
     const snoozeDaysInput = document.getElementById('snooze-days');
     const snoozeDateInput = document.getElementById('snooze-date');
     const confirmSnoozeBtn = document.getElementById('confirm-snooze-btn');
-    const cancelSnoozeBtn = document.getElementById('cancel-snooze-modal');
     let currentSnoozeLeadId = null;
 
     const openSnoozeModal = (leadId) => {
         currentSnoozeLeadId = leadId;
         snoozeDaysInput.value = '';
         snoozeDateInput.value = '';
-        snoozeModal.style.display = 'flex';
-    };
-
-    const closeSnoozeModal = () => {
-        snoozeModal.style.display = 'none';
+        snoozeModal.show();
     };
 
     const handleSnooze = (leadId) => {
@@ -98,44 +95,45 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error snoozing lead:', error);
             showToast('An error occurred while snoozing.', 'error');
         } finally {
-            closeSnoozeModal();
+            snoozeModal.hide();
         }
     };
 
     confirmSnoozeBtn.addEventListener('click', confirmSnooze);
-    cancelSnoozeBtn.addEventListener('click', closeSnoozeModal);
 
     // --- Lead Card Creation ---
     const createLeadCard = (lead) => {
         const card = document.createElement('div');
-        card.className = 'lead-card';
+        card.className = 'lead-card card';
         card.draggable = true;
         card.dataset.leadId = lead.id;
 
         const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
-        const lastNote = lead.notes && lead.notes.length > 0 ? `<p class="notes">"${lead.notes[lead.notes.length - 1].text}"</p>` : '';
+        const lastNote = lead.notes && lead.notes.length > 0 ? `<p class="notes card-text">"${lead.notes[lead.notes.length - 1].text}"</p>` : '';
         const viewOnMapHref = (lead.address && lead.address.lat) ? `/?lat=${lead.address.lat}&lng=${lead.address.lng}&zoom=18` : '#';
         const viewOnMapDisabled = !(lead.address && lead.address.lat) ? 'disabled' : '';
 
         let snoozeInfo = '';
         if (lead.snooze_until && new Date(lead.snooze_until) > new Date()) {
             const snoozeDate = new Date(lead.snooze_until).toLocaleDateString();
-            snoozeInfo = `<p class="snooze-info">Snoozed until ${snoozeDate}</p>`;
+            snoozeInfo = `<p class="snooze-info card-text text-muted">Snoozed until ${snoozeDate}</p>`;
         }
 
         card.innerHTML = `
-            <h4>${fullName}</h4>
-            <p>${lead.address?.full_address || 'No address'}</p>
-            ${lastNote}
-            ${snoozeInfo}
-            <div class="lead-card-actions">
-                <a href="${viewOnMapHref}" class="card-action-btn" ${viewOnMapDisabled} title="View on Map">🗺️</a>
-                <button class="card-action-btn snooze-btn" title="Snooze Lead">💤</button>
+            <div class="card-body">
+                <h5 class="card-title">${fullName}</h5>
+                <p class="card-text">${lead.address?.full_address || 'No address'}</p>
+                ${lastNote}
+                ${snoozeInfo}
+                <div class="lead-card-actions">
+                    <a href="${viewOnMapHref}" class="btn btn-sm btn-outline-primary" ${viewOnMapDisabled} title="View on Map"><i class="fas fa-map-marker-alt"></i></a>
+                    <button class="btn btn-sm btn-outline-secondary snooze-btn" title="Snooze Lead"><i class="fas fa-clock"></i></button>
+                </div>
             </div>
         `;
 
         card.addEventListener('click', (e) => {
-            if (e.target.closest('.card-action-btn')) {
+            if (e.target.closest('.btn')) {
                 e.stopPropagation();
                 return;
             }
@@ -299,9 +297,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Add Lead Modal ---
-    const openAddModal = () => addModal.style.display = 'flex';
-    const closeAddModal = () => addModal.style.display = 'none';
-
     const handleAddAddressInput = (e) => {
         fetchAddressSuggestions(e.target.value, (suggestions) => {
             const suggestionsContainer = document.getElementById('address-suggestions');
@@ -309,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
             suggestions.forEach(place => {
                 const div = document.createElement('div');
                 div.textContent = place.displayName;
-                div.className = 'suggestion-item';
+                div.className = 'suggestion-item list-group-item list-group-item-action';
                 div.addEventListener('click', () => {
                     document.getElementById('add-address').value = place.displayName;
                     document.getElementById('add-lat').value = place.lat;
@@ -346,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(newLead),
             });
             if (response.ok) {
-                closeAddModal();
+                addModal.hide();
                 addForm.reset();
                 await loadLeadsAndRender();
                 showToast('Lead created successfully!');
@@ -373,8 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showSnoozedCheckbox.addEventListener('change', renderLeads);
             startDateFilter.addEventListener('change', renderLeads);
             endDateFilter.addEventListener('change', renderLeads);
-            addLeadFab.addEventListener('click', openAddModal);
-            document.getElementById('cancel-add-modal').addEventListener('click', closeAddModal);
+            addLeadFab.addEventListener('click', () => addModal.show());
             document.getElementById('add-address').addEventListener('input', handleAddAddressInput);
             addForm.addEventListener('submit', handleAddFormSubmit);
             kanbanBoard.addEventListener('dragover', startDragScroll);
@@ -396,27 +390,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeKanban();
 });
-
-// --- Dynamic Styles ---
-const style = document.createElement('style');
-style.innerHTML = `
-    .lead-card {
-        background-color: white; border-radius: 4px; padding: 0.8rem;
-        margin-bottom: 0.8rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: grab;
-    }
-    .lead-card h4 { margin: 0 0 0.5rem 0; }
-    .lead-card p { margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #555; }
-    .lead-card .notes { font-style: italic; color: #777; }
-    .lead-card .snooze-info { font-size: 0.8rem; color: #6c757d; font-style: italic; margin-bottom: 0.5rem; }
-    .lead-card.dragging { opacity: 0.5; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-    .lead-card-actions { margin-top: 0.5rem; display: flex; justify-content: flex-end; gap: 0.5rem; }
-    .card-action-btn {
-        background: #f0f0f0; border: 1px solid #ddd; border-radius: 50%;
-        width: 30px; height: 30px; display: inline-flex; align-items: center;
-        justify-content: center; text-decoration: none; color: #333; cursor: pointer;
-    }
-    .card-action-btn:hover { background: #e9e9e9; }
-    .card-action-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
-    .funnel-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-`;
-document.head.appendChild(style);

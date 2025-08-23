@@ -332,4 +332,4 @@ def api_get_lead_tasks(lead_id):
     return jsonify(lead_tasks)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, host='0.0.0.0', port=5001)
