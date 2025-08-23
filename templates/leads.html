@@ -38,6 +38,9 @@
         <div class="funnel-header">
             <h2 class="mb-0">Leads Funnel</h2>
             <div class="ms-auto d-flex align-items-center gap-2">
+                <button id="hot-leads-filter-btn" class="btn btn-outline-secondary" title="Filter Hot Leads">
+                    <i class="fas fa-fire"></i>
+                </button>
                 <input type="text" id="lead-search-input" class="form-control" placeholder="Search leads...">
                 <input type="date" id="start-date-filter" class="form-control">
                 <input type="date" id="end-date-filter" class="form-control">
@@ -85,6 +88,17 @@
                             <label for="add-address" class="form-label">Address:</label>
                             <input type="text" id="add-address" class="form-control" required>
                             <div id="address-suggestions" class="list-group"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="add-lead-source" class="form-label">Lead Source:</label>
+                            <select id="add-lead-source" class="form-select">
+                                <option selected>Other</option>
+                                <option>Facebook</option>
+                                <option>Website</option>
+                                <option>Home Show</option>
+                                <option>Referral</option>
+                                <option>Doors</option>
+                            </select>
                         </div>
                     </form>
                 </div>
