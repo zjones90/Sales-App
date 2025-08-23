@@ -486,17 +486,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const lat = addLatInput.value ? parseFloat(addLatInput.value) : null;
+        const lng = addLngInput.value ? parseFloat(addLngInput.value) : null;
+
         const newLead = {
             first_name: addFirstNameInput.value,
             last_name: addLastNameInput.value,
             phone: addPhoneInput.value,
             source: addLeadSourceInput.value,
             address: {
-                lat: parseFloat(addLatInput.value),
-                lng: parseFloat(addLngInput.value),
+                lat: lat,
+                lng: lng,
                 full_address: addAddressInput.value
             }
         };
+
+        // No longer require a selected address. If lat/lng are null, it's a free-text address.
+        // The lead will be saved but won't appear on the map.
 
         try {
             const response = await fetch('/api/leads', {
