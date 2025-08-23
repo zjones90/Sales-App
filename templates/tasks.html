@@ -47,8 +47,41 @@
                 </select>
             </div>
         </div>
-        <div class="task-list">
-            <!-- Tasks will be populated here by tasks.js -->
+        <div class="task-list-container">
+            <!-- Add Task Form -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Add New Task</h5>
+                    <form id="add-task-form">
+                        <div class="mb-3">
+                            <label for="task-title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="task-title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="task-details" class="form-label">Details</label>
+                            <textarea class="form-control" id="task-details" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="task-due-date" class="form-label">Due Date</label>
+                                <input type="date" class="form-control" id="task-due-date">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="task-lead-search" class="form-label">Link to Lead</label>
+                                <input type="text" class="form-control" id="task-lead-search" placeholder="Start typing to search...">
+                                <input type="hidden" id="task-lead-id">
+                                <div id="lead-suggestions" class="list-group position-absolute" style="z-index: 1000;"></div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Task</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Task List -->
+            <div class="task-list">
+                <!-- Tasks will be populated here by tasks.js -->
+            </div>
         </div>
     </main>
     <!-- Bootstrap JS Bundle -->

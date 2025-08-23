@@ -38,20 +38,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewOnMapBtn = document.getElementById('view-on-map-btn');
 
     // --- Snooze Functionality ---
-    const snoozeModal = document.getElementById('snooze-modal');
+    const snoozeModalEl = document.getElementById('snooze-modal');
+    const snoozeModal = new bootstrap.Modal(snoozeModalEl);
     const snoozeDaysInput = document.getElementById('snooze-days');
     const snoozeDateInput = document.getElementById('snooze-date');
     const confirmSnoozeBtn = document.getElementById('confirm-snooze-btn');
-    const cancelSnoozeBtn = document.getElementById('cancel-snooze-modal');
 
     const openSnoozeModal = () => {
         snoozeDaysInput.value = '';
         snoozeDateInput.value = '';
-        snoozeModal.style.display = 'flex';
-    };
-
-    const closeSnoozeModal = () => {
-        snoozeModal.style.display = 'none';
+        snoozeModal.show();
     };
 
     const confirmSnooze = async () => {
@@ -86,13 +82,15 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error snoozing lead:', error);
             showToast('An error occurred while snoozing.', 'error');
         } finally {
-            closeSnoozeModal();
+            snoozeModal.hide();
         }
     };
 
     let currentLead = null;
     let statuses = [];
     let leadTasks = [];
+    // Default to hiding completed tasks, load user preference from localStorage
+    let showCompletedTasks = localStorage.getItem('showCompletedTasks') === 'true';
 
     const tasksListEl = document.getElementById('tasks-list');
     const addTaskForm = document.getElementById('add-task-form');
@@ -161,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const snoozeStatusContainer = document.getElementById('snooze-status-container');
         const snoozeStatusText = document.getElementById('snooze-status-text');
         if (currentLead.snooze_until && new Date(currentLead.snooze_until) > new Date()) {
-            const snoozeDate = new Date(currentLead.snooze_until).toLocaleDateString();
+            const snoozeDate = new Date(currentLead.snooze_until).toLocaleString();
             snoozeStatusText.textContent = `Snoozed until ${snoozeDate}`;
             snoozeStatusContainer.style.display = 'block';
         } else {
@@ -411,18 +409,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderLeadTasks = () => {
         tasksListEl.innerHTML = '';
-        leadTasks.forEach(task => {
+        const toggleBtn = document.getElementById('toggle-completed-tasks-btn');
+
+        // Update button icon based on state
+        toggleBtn.innerHTML = showCompletedTasks ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+
+        const tasksToRender = showCompletedTasks ? leadTasks : leadTasks.filter(task => !task.completed);
+
+        tasksToRender.forEach(task => {
             const li = document.createElement('li');
+            li.className = 'list-group-item task-item';
             li.dataset.taskId = task.id;
             li.innerHTML = `
-                <div>
-                    <input type="checkbox" ${task.completed ? 'checked' : ''}>
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" class="form-check-input me-2" ${task.completed ? 'checked' : ''}>
                     <span>${task.title}</span>
                 </div>
-                <button class="delete-task-btn">🗑️</button>
+                <div class="task-actions">
+                    <button class="edit-task-btn btn btn-sm">✏️</button>
+                    <button class="delete-task-btn btn btn-sm">🗑️</button>
+                </div>
             `;
             tasksListEl.appendChild(li);
         });
+    };
+
+    const renderTaskEditView = (taskElement, task) => {
+        taskElement.innerHTML = `
+            <div class="edit-task-view w-100">
+                <input type="text" class="form-control mb-2 edit-task-title" value="${task.title}">
+                <textarea class="form-control mb-2 edit-task-details" rows="2">${task.details || ''}</textarea>
+                <input type="date" class="form-control mb-2 edit-task-due-date" value="${task.due_date ? task.due_date.split('T')[0] : ''}">
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-sm btn-secondary cancel-edit-task-btn me-2">Cancel</button>
+                    <button class="btn btn-sm btn-success save-task-btn">Save</button>
+                </div>
+            </div>
+        `;
     };
 
     const handleAddLeadTask = async (e) => {
@@ -466,12 +489,21 @@ document.addEventListener('DOMContentLoaded', () => {
         adjustPinBtn.addEventListener('click', handleAdjustPin);
         snoozeLeadBtn.addEventListener('click', openSnoozeModal);
         confirmSnoozeBtn.addEventListener('click', confirmSnooze);
-        cancelSnoozeBtn.addEventListener('click', closeSnoozeModal);
         addTaskForm.addEventListener('submit', handleAddLeadTask);
 
+        document.getElementById('toggle-completed-tasks-btn').addEventListener('click', () => {
+            showCompletedTasks = !showCompletedTasks;
+            localStorage.setItem('showCompletedTasks', showCompletedTasks);
+            renderLeadTasks();
+        });
+
         tasksListEl.addEventListener('click', async (e) => {
+            const taskElement = e.target.closest('.task-item');
+            if (!taskElement) return;
+            const taskId = taskElement.dataset.taskId;
+
+            // Handle Checkbox Toggle
             if (e.target.matches('input[type="checkbox"]')) {
-                const taskId = e.target.closest('li').dataset.taskId;
                 const completed = e.target.checked;
                 try {
                     const response = await fetch(`/api/tasks/${taskId}`, {
@@ -480,25 +512,71 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ completed }),
                     });
                     if (!response.ok) throw new Error('Failed to update task');
+                    const task = leadTasks.find(t => t.id === taskId);
+                    if (task) task.completed = completed;
+                    // Re-render if we are hiding completed tasks
+                    if (!showCompletedTasks) renderLeadTasks();
                 } catch (error) {
-                    console.error('Error updating task:', error);
+                    console.error('Error updating task status:', error);
                     showToast('Failed to update task.', 'error');
                 }
-            } else if (e.target.matches('.delete-task-btn')) {
-                const taskId = e.target.closest('li').dataset.taskId;
+                return;
+            }
+
+            // Handle Edit Button
+            if (e.target.classList.contains('edit-task-btn')) {
+                const task = leadTasks.find(t => t.id === taskId);
+                if(task) renderTaskEditView(taskElement, task);
+                return;
+            }
+
+            // Handle Cancel Edit
+            if (e.target.classList.contains('cancel-edit-task-btn')) {
+                renderLeadTasks();
+                return;
+            }
+
+            // Handle Save Button
+            if (e.target.classList.contains('save-task-btn')) {
+                const updatedData = {
+                    title: taskElement.querySelector('.edit-task-title').value,
+                    details: taskElement.querySelector('.edit-task-details').value,
+                    due_date: taskElement.querySelector('.edit-task-due-date').value || null,
+                };
+
+                try {
+                    const response = await fetch(`/api/tasks/${taskId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedData)
+                    });
+                    if (response.ok) {
+                        showToast('Task updated!');
+                        await fetchLeadTasks();
+                    } else {
+                        showToast('Failed to update task.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error saving task:', error);
+                    showToast('An error occurred while saving.', 'error');
+                }
+                return;
+            }
+
+            // Handle Delete Button
+            if (e.target.classList.contains('delete-task-btn')) {
                 if (confirm('Are you sure you want to delete this task?')) {
                     try {
-                        const response = await fetch(`/api/tasks/${taskId}`, {
-                            method: 'DELETE',
-                        });
+                        const response = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
                         if (response.ok) {
+                            showToast('Task deleted.');
                             await fetchLeadTasks();
                         } else {
                             showToast('Failed to delete task.', 'error');
                         }
                     } catch (error) {
                         console.error('Error deleting task:', error);
-                        showToast('An error occurred while deleting the task.', 'error');
+                        showToast('An error occurred while deleting.', 'error');
                     }
                 }
             }
