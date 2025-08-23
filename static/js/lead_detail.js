@@ -20,7 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Element Selectors ---
     const leadForm = document.getElementById('lead-form');
-    const leadNameInput = document.getElementById('lead-name');
+    const leadFirstNameInput = document.getElementById('lead-first-name');
+    const leadLastNameInput = document.getElementById('lead-last-name');
     const leadStatusSelect = document.getElementById('lead-status');
     const leadCreatedAtEl = document.getElementById('lead-created-at');
     const leadPhoneInput = document.getElementById('lead-phone');
@@ -33,6 +34,61 @@ document.addEventListener('DOMContentLoaded', () => {
     const noteAttachmentInput = document.getElementById('note-attachment');
     const deleteBtn = document.getElementById('delete-lead-btn');
     const adjustPinBtn = document.getElementById('adjust-pin-btn');
+    const snoozeLeadBtn = document.getElementById('snooze-lead-btn');
+    const viewOnMapBtn = document.getElementById('view-on-map-btn');
+
+    // --- Snooze Functionality ---
+    const snoozeModal = document.getElementById('snooze-modal');
+    const snoozeDaysInput = document.getElementById('snooze-days');
+    const snoozeDateInput = document.getElementById('snooze-date');
+    const confirmSnoozeBtn = document.getElementById('confirm-snooze-btn');
+    const cancelSnoozeBtn = document.getElementById('cancel-snooze-modal');
+
+    const openSnoozeModal = () => {
+        snoozeDaysInput.value = '';
+        snoozeDateInput.value = '';
+        snoozeModal.style.display = 'flex';
+    };
+
+    const closeSnoozeModal = () => {
+        snoozeModal.style.display = 'none';
+    };
+
+    const confirmSnooze = async () => {
+        let snoozeUntil = null;
+        const days = parseInt(snoozeDaysInput.value);
+        const date = snoozeDateInput.value;
+
+        if (date) {
+            snoozeUntil = new Date(date);
+        } else if (!isNaN(days) && days > 0) {
+            snoozeUntil = new Date();
+            snoozeUntil.setDate(snoozeUntil.getDate() + days);
+        } else {
+            showToast('Please enter a valid number of days or select a date.', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/leads/${LEAD_ID}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ snooze_until: snoozeUntil.toISOString().split('T')[0] }),
+            });
+            if (response.ok) {
+                showToast('Lead snoozed!');
+                currentLead = await response.json();
+                renderLeadData();
+            } else {
+                showToast('Failed to snooze lead.', 'error');
+            }
+        } catch (error) {
+            console.error('Error snoozing lead:', error);
+            showToast('An error occurred while snoozing.', 'error');
+        } finally {
+            closeSnoozeModal();
+        }
+    };
 
     let currentLead = null;
     let statuses = [];
@@ -81,7 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentLead) return;
 
         // Populate form fields
-        leadNameInput.value = currentLead.name || '';
+        leadFirstNameInput.value = currentLead.first_name || '';
+        leadLastNameInput.value = currentLead.last_name || '';
         leadPhoneInput.value = currentLead.phone || '';
         leadAddressInput.value = currentLead.address?.full_address || '';
         leadStatusSelect.value = currentLead.status || 'New';
@@ -105,19 +162,88 @@ document.addEventListener('DOMContentLoaded', () => {
             textBtn.style.display = 'none';
         }
 
+        // Set up View on Map link
+        if (currentLead.address && currentLead.address.lat && currentLead.address.lng) {
+            viewOnMapBtn.href = `/?lat=${currentLead.address.lat}&lng=${currentLead.address.lng}&zoom=18`;
+            viewOnMapBtn.style.display = 'inline-block';
+        } else {
+            viewOnMapBtn.style.display = 'none';
+        }
+
         // Render notes
         notesListEl.innerHTML = '';
         if (currentLead.notes && Array.isArray(currentLead.notes)) {
             currentLead.notes.forEach(note => {
                 const li = document.createElement('li');
+                li.dataset.noteId = note.id;
+
                 const noteDate = new Date(note.timestamp).toLocaleString();
-                let noteContent = `<p>${note.text}</p><small>${noteDate}</small>`;
-                if (note.attachment) {
-                    noteContent += `<br><a href="${note.attachment}" target="_blank">View Attachment</a>`;
-                }
+                let noteContent = `
+                    <div class="note-content">
+                        <p>${note.text}</p>
+                        <small>${noteDate}</small>
+                        ${note.attachment ? `<br><a href="${note.attachment}" target="_blank">View Attachment</a>` : ''}
+                    </div>
+                    <div class="note-actions">
+                        <button class="edit-note-btn">✏️</button>
+                        <button class="delete-note-btn">🗑️</button>
+                    </div>
+                `;
                 li.innerHTML = noteContent;
                 notesListEl.appendChild(li);
             });
+        }
+    };
+
+    const handleEditNote = async (noteId) => {
+        const noteToEdit = currentLead.notes.find(n => n.id === noteId);
+        if (!noteToEdit) return;
+
+        const newText = prompt('Edit your note:', noteToEdit.text);
+        if (newText === null || newText.trim() === noteToEdit.text) {
+            return; // Exit if user cancels or makes no change
+        }
+
+        try {
+            const response = await fetch(`/api/leads/${LEAD_ID}/notes/${noteId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: newText.trim() }),
+            });
+
+            if (response.ok) {
+                currentLead = await response.json();
+                renderLeadData();
+                showToast('Note updated successfully!');
+            } else {
+                showToast('Failed to update note.', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating note:', error);
+            showToast('An error occurred while updating the note.', 'error');
+        }
+    };
+
+    const handleDeleteNote = async (noteId) => {
+        if (!confirm('Are you sure you want to delete this note?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/leads/${LEAD_ID}/notes/${noteId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                currentLead = await response.json();
+                renderLeadData();
+                showToast('Note deleted successfully!');
+            } else {
+                showToast('Failed to delete note.', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting note:', error);
+            showToast('An error occurred while deleting the note.', 'error');
         }
     };
 
@@ -162,7 +288,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleUpdateLead = async (e) => {
         e.preventDefault();
         const updatedData = {
-            name: leadNameInput.value,
+            first_name: leadFirstNameInput.value,
+            last_name: leadLastNameInput.value,
             phone: leadPhoneInput.value,
             status: leadStatusSelect.value,
             address: {
@@ -264,6 +391,21 @@ document.addEventListener('DOMContentLoaded', () => {
         leadForm.addEventListener('submit', handleUpdateLead);
         deleteBtn.addEventListener('click', handleDeleteLead);
         adjustPinBtn.addEventListener('click', handleAdjustPin);
+        snoozeLeadBtn.addEventListener('click', openSnoozeModal);
+        confirmSnoozeBtn.addEventListener('click', confirmSnooze);
+        cancelSnoozeBtn.addEventListener('click', closeSnoozeModal);
+
+        notesListEl.addEventListener('click', (e) => {
+            const editButton = e.target.closest('.edit-note-btn');
+            const deleteButton = e.target.closest('.delete-note-btn');
+            const noteId = e.target.closest('li')?.dataset.noteId;
+
+            if (editButton && noteId) {
+                handleEditNote(noteId);
+            } else if (deleteButton && noteId) {
+                handleDeleteNote(noteId);
+            }
+        });
     };
 
     initializePage();

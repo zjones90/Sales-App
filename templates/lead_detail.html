@@ -124,6 +124,16 @@
             padding: 1rem;
             border-radius: 5px;
             margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .note-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            margin-left: 0.5rem;
         }
         #add-note-form {
             margin-top: 1.5rem;
@@ -161,8 +171,12 @@
         <div id="lead-detail-container" class="lead-detail-container">
             <form id="lead-form">
                 <div class="lead-form-group">
-                    <label for="lead-name">Name</label>
-                    <input type="text" id="lead-name" name="name">
+                    <label for="lead-first-name">First Name</label>
+                    <input type="text" id="lead-first-name" name="first_name">
+                </div>
+                <div class="lead-form-group">
+                    <label for="lead-last-name">Last Name</label>
+                    <input type="text" id="lead-last-name" name="last_name">
                 </div>
                 <div class="lead-form-group">
                     <label for="lead-created-at">Created Date</label>
@@ -188,6 +202,8 @@
 
                 <div class="lead-actions">
                     <button type="submit" class="btn-save-lead">Save Changes</button>
+                    <button id="snooze-lead-btn" type="button" class="btn-save-lead" style="background-color: #17a2b8;">Snooze</button>
+                    <a id="view-on-map-btn" href="#" class="btn-save-lead" style="background-color: #6c757d; text-decoration: none;" target="_blank">View on Map</a>
                     <button id="adjust-pin-btn" type="button" class="btn-save-lead" style="background-color: #ffc107; color: black;">Adjust Pin to Match Address</button>
                     <div class="more-dropdown">
                         <button type="button" class="btn-more">More</button>
@@ -217,5 +233,25 @@
         const LEAD_ID = "{{ lead_id }}";
     </script>
     <script src="/static/js/lead_detail.js"></script>
+
+    <!-- Snooze Modal -->
+    <div id="snooze-modal" class="modal-backdrop" style="display:none;">
+        <div class="modal-content">
+            <h3>Snooze Lead</h3>
+            <p>Snooze for a number of days, or until a specific date.</p>
+            <div class="lead-form-group">
+                <label for="snooze-days">Snooze for (days):</label>
+                <input type="number" id="snooze-days" min="1" placeholder="e.g., 7">
+            </div>
+            <div class="lead-form-group">
+                <label for="snooze-date">Snooze until:</label>
+                <input type="date" id="snooze-date">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-save" id="confirm-snooze-btn">Snooze</button>
+                <button type="button" class="btn-cancel" id="cancel-snooze-modal">Cancel</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

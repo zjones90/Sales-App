@@ -43,15 +43,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Snooze Functionality ---
-    const handleSnooze = async (leadId) => {
-        const days = prompt("Snooze for how many days?", "7");
-        if (days === null || isNaN(parseInt(days))) return;
+    const snoozeModal = document.getElementById('snooze-modal');
+    const snoozeDaysInput = document.getElementById('snooze-days');
+    const snoozeDateInput = document.getElementById('snooze-date');
+    const confirmSnoozeBtn = document.getElementById('confirm-snooze-btn');
+    const cancelSnoozeBtn = document.getElementById('cancel-snooze-modal');
+    let currentSnoozeLeadId = null;
 
-        const snoozeUntil = new Date();
-        snoozeUntil.setDate(snoozeUntil.getDate() + parseInt(days));
+    const openSnoozeModal = (leadId) => {
+        currentSnoozeLeadId = leadId;
+        snoozeDaysInput.value = '';
+        snoozeDateInput.value = '';
+        snoozeModal.style.display = 'flex';
+    };
+
+    const closeSnoozeModal = () => {
+        snoozeModal.style.display = 'none';
+    };
+
+    const handleSnooze = (leadId) => {
+        openSnoozeModal(leadId);
+    };
+
+    const confirmSnooze = async () => {
+        let snoozeUntil = null;
+        const days = parseInt(snoozeDaysInput.value);
+        const date = snoozeDateInput.value;
+
+        if (date) {
+            snoozeUntil = new Date(date);
+        } else if (!isNaN(days) && days > 0) {
+            snoozeUntil = new Date();
+            snoozeUntil.setDate(snoozeUntil.getDate() + days);
+        } else {
+            showToast('Please enter a valid number of days or select a date.', 'error');
+            return;
+        }
 
         try {
-            const response = await fetch(`/api/leads/${leadId}`, {
+            const response = await fetch(`/api/leads/${currentSnoozeLeadId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ snooze_until: snoozeUntil.toISOString().split('T')[0] }),
@@ -65,8 +95,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error snoozing lead:', error);
             showToast('An error occurred while snoozing.', 'error');
+        } finally {
+            closeSnoozeModal();
         }
     };
+
+    confirmSnoozeBtn.addEventListener('click', confirmSnooze);
+    cancelSnoozeBtn.addEventListener('click', closeSnoozeModal);
 
     // --- Lead Card Creation ---
     const createLeadCard = (lead) => {
@@ -75,14 +110,22 @@ document.addEventListener('DOMContentLoaded', () => {
         card.draggable = true;
         card.dataset.leadId = lead.id;
 
+        const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
         const lastNote = lead.notes && lead.notes.length > 0 ? `<p class="notes">"${lead.notes[lead.notes.length - 1].text}"</p>` : '';
         const viewOnMapHref = (lead.address && lead.address.lat) ? `/?lat=${lead.address.lat}&lng=${lead.address.lng}&zoom=18` : '#';
         const viewOnMapDisabled = !(lead.address && lead.address.lat) ? 'disabled' : '';
 
+        let snoozeInfo = '';
+        if (lead.snooze_until && new Date(lead.snooze_until) > new Date()) {
+            const snoozeDate = new Date(lead.snooze_until).toLocaleDateString();
+            snoozeInfo = `<p class="snooze-info">Snoozed until ${snoozeDate}</p>`;
+        }
+
         card.innerHTML = `
-            <h4>${lead.name}</h4>
+            <h4>${fullName}</h4>
             <p>${lead.address?.full_address || 'No address'}</p>
             ${lastNote}
+            ${snoozeInfo}
             <div class="lead-card-actions">
                 <a href="${viewOnMapHref}" class="card-action-btn" ${viewOnMapDisabled} title="View on Map">🗺️</a>
                 <button class="card-action-btn snooze-btn" title="Snooze Lead">💤</button>
@@ -111,7 +154,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const now = new Date();
 
         const filteredLeads = allLeads.filter(lead => {
-            const searchMatch = (lead.name?.toLowerCase().includes(query) ||
+            const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.toLowerCase();
+            const searchMatch = (fullName.includes(query) ||
                                  lead.phone?.toLowerCase().includes(query) ||
                                  lead.address?.full_address?.toLowerCase().includes(query));
 
@@ -241,7 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleAddFormSubmit = async (e) => {
         e.preventDefault();
         const newLead = {
-            name: document.getElementById('add-name').value,
+            first_name: document.getElementById('add-first-name').value,
+            last_name: document.getElementById('add-last-name').value,
             phone: document.getElementById('add-phone').value,
             address: {
                 lat: parseFloat(document.getElementById('add-lat').value),
@@ -293,6 +338,15 @@ document.addEventListener('DOMContentLoaded', () => {
             addForm.addEventListener('submit', handleAddFormSubmit);
             kanbanBoard.addEventListener('dragover', startDragScroll);
 
+            // Hide address suggestions when clicking outside
+            document.addEventListener('click', (e) => {
+                const suggestionsContainer = document.getElementById('address-suggestions');
+                const addressInput = document.getElementById('add-address');
+                if (suggestionsContainer && !addressInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                    suggestionsContainer.innerHTML = '';
+                }
+            });
+
         } catch (error) {
             console.error('Error initializing Kanban board:', error);
             kanbanBoard.innerHTML = '<p>Error loading board.</p>';
@@ -312,6 +366,7 @@ style.innerHTML = `
     .lead-card h4 { margin: 0 0 0.5rem 0; }
     .lead-card p { margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #555; }
     .lead-card .notes { font-style: italic; color: #777; }
+    .lead-card .snooze-info { font-size: 0.8rem; color: #6c757d; font-style: italic; margin-bottom: 0.5rem; }
     .lead-card.dragging { opacity: 0.5; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
     .lead-card-actions { margin-top: 0.5rem; display: flex; justify-content: flex-end; gap: 0.5rem; }
     .card-action-btn {

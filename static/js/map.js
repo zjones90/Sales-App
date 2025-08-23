@@ -108,7 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- 1. Search existing leads ---
         const matchedLeads = Object.values(allLeads).filter(lead => {
-            const nameMatch = lead.name && lead.name.toLowerCase().includes(query);
+            const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.toLowerCase();
+            const nameMatch = fullName.includes(query);
             const phoneMatch = lead.phone && lead.phone.toLowerCase().includes(query);
             const addressMatch = lead.address?.full_address && lead.address.full_address.toLowerCase().includes(query);
             return nameMatch || phoneMatch || addressMatch;
@@ -118,7 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
             matchedLeads.forEach(lead => {
                 const div = document.createElement('div');
                 div.className = 'suggestion-item';
-                div.innerHTML = `<b>${lead.name}</b><br><small>${lead.address.full_address}</small>`;
+                const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
+                div.innerHTML = `<b>${fullName}</b><br><small>${lead.address.full_address}</small>`;
                 div.addEventListener('click', () => {
                     map.setView([lead.address.lat, lead.address.lng], 18); // Zoom in close
                     // Find and open the lead's popup
@@ -126,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (marker) {
                         marker.openPopup();
                     }
-                    searchInput.value = lead.name;
+                    searchInput.value = fullName;
                     searchSuggestions.innerHTML = '';
                 });
                 searchSuggestions.appendChild(div);
@@ -198,8 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Functions ---
     const generatePopupContent = (lead) => {
+        const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Unnamed Lead';
         const addressStr = lead.address?.full_address || 'No address provided';
-        return `<b>${lead.name || 'Unnamed Lead'}</b><br>
+        return `<b>${fullName}</b><br>
                 Status: ${lead.status || 'N/A'}<br>
                 ${addressStr}<br>
                 ${lead.phone || ''}
@@ -227,11 +230,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const marker = e.target;
         const lead = marker.leadData;
         const newLatLng = marker.getLatLng();
+        const oldLatLng = [lead.address.lat, lead.address.lng];
 
-        // Show a temporary message in the popup
-        marker.setPopupContent('Updating address...').openPopup();
-
-        // 1. Reverse geocode the new location
+        // 1. Reverse geocode the new location to show the user
         let newAddress = 'Address not found';
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${newLatLng.lat}&lon=${newLatLng.lng}`);
@@ -241,9 +242,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Reverse geocoding failed:', error);
+            // We can still proceed, but the user won't see the new address in the confirm dialog
         }
 
-        // 2. Prepare the data for the API
+        // 2. Ask for confirmation
+        const confirmed = confirm(`Update address to "${newAddress}"?`);
+
+        if (!confirmed) {
+            // Revert marker position if the user cancels
+            marker.setLatLng(oldLatLng);
+            return;
+        }
+
+        // 3. Prepare the data for the API
         const updatedData = {
             address: {
                 lat: newLatLng.lat,
@@ -252,8 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // 3. Send the update to the server
+        // 4. Send the update to the server
         try {
+            marker.setPopupContent('Updating address...').openPopup();
             const response = await fetch(`/api/leads/${lead.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -262,22 +274,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 const updatedLead = await response.json();
-                // Update local data stores
                 allLeads[lead.id] = updatedLead;
                 marker.leadData = updatedLead;
-                // Update the popup with the final, correct content
                 marker.setPopupContent(generatePopupContent(updatedLead));
                 showToast('Lead location updated!');
             } else {
-                // Revert marker position on failure
-                marker.setLatLng([lead.address.lat, lead.address.lng]);
-                marker.setPopupContent(generatePopupContent(lead)); // Restore original popup
+                marker.setLatLng(oldLatLng);
+                marker.setPopupContent(generatePopupContent(lead));
                 showToast('Failed to update lead location.', 'error');
             }
         } catch (error) {
             console.error('Error updating lead location:', error);
-            marker.setLatLng([lead.address.lat, lead.address.lng]);
-            marker.setPopupContent(generatePopupContent(lead)); // Restore original popup
+            marker.setLatLng(oldLatLng);
+            marker.setPopupContent(generatePopupContent(lead));
             showToast('An error occurred.', 'error');
         }
     };
@@ -437,13 +446,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error fetching address suggestions:', error);
         }
-    });
-
-    // --- Event Listeners ---
-    document.getElementById('filter-button').addEventListener('click', () => {
-        const filterPanel = document.getElementById('filter-panel');
-        const isHidden = filterPanel.style.display === 'none';
-        filterPanel.style.display = isHidden ? 'block' : 'none';
     });
 
     document.addEventListener('click', function(e) {

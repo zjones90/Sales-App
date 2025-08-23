@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 from flask import Flask, jsonify, render_template, request, abort
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -65,7 +66,8 @@ def api_create_lead():
 
     new_lead = {
         'id': lead_id_str,
-        'name': data.get('name', ''),
+        'first_name': data.get('first_name', ''),
+        'last_name': data.get('last_name', ''),
         'address': data.get('address', {}),
         'phone': data.get('phone', ''),
         'notes': [],
@@ -96,16 +98,23 @@ def api_update_lead(lead_id):
     if 'created_at' in data:
         del data['created_at']
 
-    # Perform a deep merge for nested objects like 'address'
+    # The frontend will be changed to send first_name and last_name.
+    # If the old 'name' field is in the request, ignore it.
+    if 'name' in data:
+        del data['name']
+
+    # Perform a deep merge for nested objects like 'address' and update other fields
     for key, value in data.items():
         if key == 'address' and isinstance(value, dict):
             if 'address' not in leads[lead_id] or not isinstance(leads[lead_id].get('address'), dict):
                 leads[lead_id]['address'] = {}
             leads[lead_id]['address'].update(value)
-        elif key in leads[lead_id] and key != 'notes': # Exclude notes from this generic update
+        elif key != 'notes': # Exclude notes from this generic update
              leads[lead_id][key] = value
-        elif key == 'snooze_until': # Allow adding/updating snooze_until
-            leads[lead_id][key] = value
+
+    # Remove the old 'name' field from the stored lead object if it exists
+    if 'name' in leads[lead_id]:
+        del leads[lead_id]['name']
 
     save_leads(leads)
     return jsonify(leads[lead_id])
@@ -131,6 +140,7 @@ def api_add_note(lead_id):
 
 
     new_note = {
+        'id': str(uuid.uuid4()),
         'text': note_text,
         'timestamp': datetime.utcnow().isoformat(),
         'attachment': attachment_path
@@ -143,6 +153,53 @@ def api_add_note(lead_id):
     save_leads(leads)
 
     return jsonify(leads[lead_id]), 200
+
+@app.route('/api/leads/<lead_id>/notes/<note_id>', methods=['PUT'])
+def api_update_note(lead_id, note_id):
+    data = request.get_json()
+    if not data or 'text' not in data:
+        abort(400, description="Invalid request body")
+
+    leads = get_leads()
+    if lead_id not in leads:
+        abort(404, description="Lead not found")
+
+    note_to_update = None
+    for note in leads[lead_id].get('notes', []):
+        if note.get('id') == note_id:
+            note_to_update = note
+            break
+
+    if not note_to_update:
+        abort(404, description="Note not found")
+
+    note_to_update['text'] = data['text']
+    # Optionally update timestamp
+    note_to_update['timestamp'] = datetime.utcnow().isoformat()
+
+    save_leads(leads)
+    return jsonify(leads[lead_id])
+
+@app.route('/api/leads/<lead_id>/notes/<note_id>', methods=['DELETE'])
+def api_delete_note(lead_id, note_id):
+    leads = get_leads()
+    if lead_id not in leads:
+        abort(404, description="Lead not found")
+
+    notes = leads[lead_id].get('notes', [])
+    note_index_to_delete = -1
+    for i, note in enumerate(notes):
+        if note.get('id') == note_id:
+            note_index_to_delete = i
+            break
+
+    if note_index_to_delete == -1:
+        abort(404, description="Note not found")
+
+    del notes[note_index_to_delete]
+
+    save_leads(leads)
+    return jsonify(leads[lead_id])
 
 
 @app.route('/api/leads/<lead_id>', methods=['DELETE'])
