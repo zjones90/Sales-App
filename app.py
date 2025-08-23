@@ -1,11 +1,15 @@
 import json
 import os
 from flask import Flask, jsonify, render_template, request, abort
+from datetime import datetime
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
 # Path for our JSON data file
 LEADS_FILE = 'leads.json'
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Define the canonical list of lead statuses
 LEAD_STATUSES = [
@@ -65,7 +69,9 @@ def api_create_lead():
         'address': data.get('address', {}),
         'phone': data.get('phone', ''),
         'notes': [],
-        'status': 'New'
+        'status': 'New',
+        'created_at': datetime.utcnow().isoformat(),
+        'snooze_until': None
     }
     # The address object should contain lat, lng, and full_address
     if 'address' in data and 'full_address' in data['address']:
@@ -86,17 +92,58 @@ def api_update_lead(lead_id):
     if lead_id not in leads:
         abort(404, description="Lead not found")
 
+    # Prevent 'created_at' from being updated
+    if 'created_at' in data:
+        del data['created_at']
+
     # Perform a deep merge for nested objects like 'address'
     for key, value in data.items():
         if key == 'address' and isinstance(value, dict):
             if 'address' not in leads[lead_id] or not isinstance(leads[lead_id].get('address'), dict):
                 leads[lead_id]['address'] = {}
             leads[lead_id]['address'].update(value)
-        elif key in leads[lead_id]:
+        elif key in leads[lead_id] and key != 'notes': # Exclude notes from this generic update
+             leads[lead_id][key] = value
+        elif key == 'snooze_until': # Allow adding/updating snooze_until
             leads[lead_id][key] = value
 
     save_leads(leads)
     return jsonify(leads[lead_id])
+
+@app.route('/api/leads/<lead_id>/notes', methods=['POST'])
+def api_add_note(lead_id):
+    leads = get_leads()
+    if lead_id not in leads:
+        abort(404, description="Lead not found")
+
+    note_text = request.form.get('text', '')
+    file = request.files.get('attachment')
+
+    attachment_path = None
+    if file:
+        filename = secure_filename(file.filename)
+        lead_upload_dir = os.path.join(app.config['UPLOAD_FOLDER'], lead_id)
+        os.makedirs(lead_upload_dir, exist_ok=True)
+        attachment_path = os.path.join(lead_upload_dir, filename)
+        file.save(attachment_path)
+        # Store a web-accessible path
+        attachment_path = f'/{attachment_path}'
+
+
+    new_note = {
+        'text': note_text,
+        'timestamp': datetime.utcnow().isoformat(),
+        'attachment': attachment_path
+    }
+
+    if 'notes' not in leads[lead_id] or not isinstance(leads[lead_id]['notes'], list):
+        leads[lead_id]['notes'] = []
+
+    leads[lead_id]['notes'].append(new_note)
+    save_leads(leads)
+
+    return jsonify(leads[lead_id]), 200
+
 
 @app.route('/api/leads/<lead_id>', methods=['DELETE'])
 def api_delete_lead(lead_id):
