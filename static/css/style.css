@@ -256,14 +256,38 @@ main {
     background-color: #e9ecef;
     border-radius: 8px;
     padding: 1rem;
-    min-width: 280px;
+    width: 250px; /* Narrower columns */
     flex-shrink: 0;
+    transition: width 0.3s ease; /* Animate width changes */
+}
+
+.kanban-column.collapsed {
+    width: 40px; /* Width when collapsed */
 }
 
 .kanban-column h3 {
     margin-top: 0;
     border-bottom: 2px solid #ccc;
     padding-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer; /* Indicate it's clickable */
+}
+
+.kanban-column h3 .toggle-btn {
+    font-size: 1.2rem;
+    cursor: pointer;
+    transform: rotate(0deg);
+    transition: transform 0.3s ease;
+}
+
+.kanban-column.collapsed h3 .toggle-btn {
+    transform: rotate(180deg);
+}
+
+.kanban-column.collapsed .lead-card {
+    display: none; /* Hide cards when collapsed */
 }
 
 /* Toast Notification Styles */

@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const kanbanBoard = document.getElementById('kanban-board');
     const searchInput = document.getElementById('lead-search-input');
     const showSnoozedCheckbox = document.getElementById('show-snoozed-checkbox');
+    const startDateFilter = document.getElementById('start-date-filter');
+    const endDateFilter = document.getElementById('end-date-filter');
     const addLeadFab = document.getElementById('add-lead-fab');
     const addModal = document.getElementById('add-modal');
     const addForm = document.getElementById('add-form');
@@ -151,6 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderLeads = () => {
         const query = searchInput.value.toLowerCase();
         const showSnoozed = showSnoozedCheckbox.checked;
+        const startDate = startDateFilter.value;
+        const endDate = endDateFilter.value;
         const now = new Date();
 
         const filteredLeads = allLeads.filter(lead => {
@@ -162,7 +166,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const isSnoozed = lead.snooze_until && new Date(lead.snooze_until) > now;
             const snoozeMatch = showSnoozed || !isSnoozed;
 
-            return searchMatch && snoozeMatch;
+            let dateMatch = true;
+            if (lead.created_at) {
+                const leadDate = new Date(lead.created_at);
+                if (startDate && leadDate < new Date(startDate)) {
+                    dateMatch = false;
+                }
+                // Add one day to the end date to include the entire day
+                if (endDate) {
+                    const endDateTime = new Date(endDate);
+                    endDateTime.setDate(endDateTime.getDate() + 1);
+                    if (leadDate > endDateTime) {
+                        dateMatch = false;
+                    }
+                }
+            } else if (startDate || endDate) {
+                dateMatch = false; // Exclude leads without a created_at date if filtering by date
+            }
+
+            return searchMatch && snoozeMatch && dateMatch;
         });
 
         document.querySelectorAll('.kanban-column').forEach(column => {
@@ -215,16 +237,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const column = document.createElement('div');
             column.className = 'kanban-column';
             column.dataset.status = status;
-            column.innerHTML = `<h3>${status}</h3>`;
+
+            const header = document.createElement('h3');
+            header.innerHTML = `${status} <span class="toggle-btn">‹</span>`;
+            header.addEventListener('click', () => {
+                column.classList.toggle('collapsed');
+            });
+
+            column.appendChild(header);
 
             column.addEventListener('dragover', (e) => {
                 e.preventDefault();
+                // Prevent dropping on a collapsed column
+                if (column.classList.contains('collapsed')) return;
                 const draggingCard = document.querySelector('.dragging');
                 if (draggingCard) column.appendChild(draggingCard);
             });
 
             column.addEventListener('drop', async (e) => {
                 e.preventDefault();
+                if (column.classList.contains('collapsed')) return;
+
                 const leadId = e.dataTransfer.getData('text/plain');
                 const newStatus = column.dataset.status;
 
@@ -326,6 +359,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Event Listeners
             searchInput.addEventListener('input', renderLeads);
             showSnoozedCheckbox.addEventListener('change', renderLeads);
+            startDateFilter.addEventListener('change', renderLeads);
+            endDateFilter.addEventListener('change', renderLeads);
             addLeadFab.addEventListener('click', openAddModal);
             document.getElementById('cancel-add-modal').addEventListener('click', closeAddModal);
             document.getElementById('add-address').addEventListener('input', handleAddAddressInput);
