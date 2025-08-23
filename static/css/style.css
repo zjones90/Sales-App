@@ -168,6 +168,20 @@ body {
     white-space: normal; /* Override any white-space settings */
 }
 
+@media (max-width: 991.98px) {
+    #custom-controls-container,
+    #filter-control-container {
+        /* Move controls down to avoid overlapping the expanded navbar */
+        top: 125px;
+    }
+
+    #filter-panel {
+        /* Adjust filter panel to not go off-screen */
+        right: 0;
+        left: auto;
+    }
+}
+
 /* Style for the active state of icon-based toggle buttons */
 #show-completed-tasks-toggle.active,
 #hot-leads-filter-btn.active,
