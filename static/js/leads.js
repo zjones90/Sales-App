@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const kanbanBoard = document.getElementById('kanban-board');
     const searchInput = document.getElementById('lead-search-input');
     const hotLeadsFilterBtn = document.getElementById('hot-leads-filter-btn');
-    const showSnoozedCheckbox = document.getElementById('show-snoozed-checkbox');
+    const showSnoozedBtn = document.getElementById('show-snoozed-btn');
     const startDateFilter = document.getElementById('start-date-filter');
     const endDateFilter = document.getElementById('end-date-filter');
     const addLeadFab = document.getElementById('add-lead-fab');
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderLeads = () => {
         const query = searchInput.value.toLowerCase();
         const showHotOnly = hotLeadsFilterBtn.classList.contains('active');
-        const showSnoozed = showSnoozedCheckbox.checked;
+        const showSnoozed = showSnoozedBtn.classList.contains('active');
         const startDate = startDateFilter.value;
         const endDate = endDateFilter.value;
         const now = new Date();
@@ -417,8 +417,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 hotLeadsFilterBtn.classList.toggle('active');
                 renderLeads();
             });
+            showSnoozedBtn.addEventListener('click', () => {
+                showSnoozedBtn.classList.toggle('active');
+                renderLeads();
+            });
             searchInput.addEventListener('input', renderLeads);
-            showSnoozedCheckbox.addEventListener('change', renderLeads);
             startDateFilter.addEventListener('change', renderLeads);
             endDateFilter.addEventListener('change', renderLeads);
             addLeadFab.addEventListener('click', () => addModal.show());

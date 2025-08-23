@@ -137,6 +137,7 @@ body {
     margin-bottom: 0;
     border-bottom: none;
     border-radius: .25rem;
+    position: relative; /* Add relative positioning */
 }
 
 .kanban-column.collapsed .column-title {
@@ -145,7 +146,12 @@ body {
 }
 
 .kanban-column.collapsed .lead-count {
-    display: none;
+    display: inline-flex; /* Show the count */
+    position: absolute;
+    top: 10px; /* Position at the top */
+    left: 50%;
+    transform: translateX(-50%) rotate(180deg); /* Counter-rotate and center */
+    z-index: 1;
 }
 
 .kanban-column.collapsed .lead-card {
@@ -154,6 +160,15 @@ body {
 
 .lead-card {
     cursor: grab;
+}
+
+.lead-card .card-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 4; /* Limit to 4 lines */
+    -webkit-box-orient: vertical;
+    white-space: normal; /* Override any white-space settings */
 }
 
 .lead-card.dragging {
