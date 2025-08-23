@@ -200,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const generatePopupContent = (lead) => {
         const addressStr = lead.address?.full_address || 'No address provided';
         return `<b>${lead.name || 'Unnamed Lead'}</b><br>
+                Status: ${lead.status || 'N/A'}<br>
                 ${addressStr}<br>
                 ${lead.phone || ''}
                 <br><a href="/leads/${lead.id}" style="font-weight: bold; color: #007bff;">View Details</a>`;
@@ -283,8 +284,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateMapFilters = () => {
         const checkedStatuses = Array.from(document.querySelectorAll('#filter-options input:checked')).map(cb => cb.value);
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+
+        // Add 'T23:59:59' to the end date to include the entire day
+        const endDateTime = endDate ? `${endDate}T23:59:59` : null;
+
         leadMarkers.forEach(marker => {
-            if (checkedStatuses.includes(marker.leadData.status)) {
+            const lead = marker.leadData;
+            const statusMatch = checkedStatuses.includes(lead.status);
+
+            let dateMatch = true;
+            if (lead.created_at) {
+                const leadDate = new Date(lead.created_at);
+                if (startDate && leadDate < new Date(startDate)) {
+                    dateMatch = false;
+                }
+                if (endDateTime && leadDate > new Date(endDateTime)) {
+                    dateMatch = false;
+                }
+            } else if (startDate || endDate) {
+                // If there's a date filter, but the lead has no created_at, it shouldn't match
+                dateMatch = false;
+            }
+
+            if (statusMatch && dateMatch) {
                 if (!map.hasLayer(marker)) marker.addTo(map);
             } else {
                 if (map.hasLayer(marker)) marker.removeFrom(map);
@@ -609,8 +633,29 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     };
 
+    const centerOnLeadFromURL = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const lat = urlParams.get('lat');
+        const lng = urlParams.get('lng');
+        const zoom = urlParams.get('zoom') || 18;
+        if (lat && lng) {
+            map.setView([parseFloat(lat), parseFloat(lng)], parseInt(zoom));
+        }
+    };
+
+    // --- Event Listeners ---
+    document.getElementById('filter-button').addEventListener('click', () => {
+        const filterPanel = document.getElementById('filter-panel');
+        const isHidden = filterPanel.style.display === 'none';
+        filterPanel.style.display = isHidden ? 'block' : 'none';
+    });
+
+    document.getElementById('start-date').addEventListener('change', updateMapFilters);
+    document.getElementById('end-date').addEventListener('change', updateMapFilters);
+
     // --- Main App Initialization ---
     const initializeMap = async () => {
+        centerOnLeadFromURL(); // Center on lead first if params exist
         try {
             const response = await fetch('/api/statuses');
             if (!response.ok) {

@@ -45,6 +45,39 @@
         .btn-delete-lead:hover {
             background-color: #c82333;
         }
+        /* Styles for the "More" dropdown */
+        .more-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .more-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            right: 0;
+        }
+        .more-dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .more-dropdown-content a:hover {background-color: #f1f1f1}
+        .more-dropdown:hover .more-dropdown-content {
+            display: block;
+        }
+        .btn-more {
+            background-color: #6c757d;
+            color: white;
+            padding: 0.8rem 1.2rem;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+
         /* Styles for the editable form */
         .lead-form-group {
             margin-bottom: 1rem;
@@ -131,9 +164,13 @@
                     <label for="lead-name">Name</label>
                     <input type="text" id="lead-name" name="name">
                 </div>
+                <div class="lead-form-group">
+                    <label for="lead-created-at">Created Date</label>
+                    <p id="lead-created-at" style="font-size: 1rem; color: #555;">Loading...</p>
+                </div>
                  <div class="lead-form-group">
                     <label for="lead-status">Status</label>
-                    <p><strong id="lead-status-text"></strong> (Change on Kanban board)</p>
+                    <select id="lead-status" name="status" class="lead-form-group-input"></select>
                 </div>
                 <div class="lead-form-group">
                     <label for="lead-phone">Phone</label>
@@ -152,7 +189,12 @@
                 <div class="lead-actions">
                     <button type="submit" class="btn-save-lead">Save Changes</button>
                     <button id="adjust-pin-btn" type="button" class="btn-save-lead" style="background-color: #ffc107; color: black;">Adjust Pin to Match Address</button>
-                    <button id="delete-lead-btn" class="btn-delete-lead" type="button">Delete Lead</button>
+                    <div class="more-dropdown">
+                        <button type="button" class="btn-more">More</button>
+                        <div class="more-dropdown-content">
+                            <a href="#" id="delete-lead-btn">Delete Lead</a>
+                        </div>
+                    </div>
                 </div>
             </form>
 
@@ -161,6 +203,10 @@
                 <ul id="notes-list"></ul>
                 <form id="add-note-form">
                     <textarea id="note-text" rows="3" placeholder="Log a call, text, or meeting..."></textarea>
+                    <div class="lead-form-group">
+                        <label for="note-attachment">Attachment</label>
+                        <input type="file" id="note-attachment" name="attachment">
+                    </div>
                     <button type="submit">Add Note</button>
                 </form>
             </div>

@@ -23,7 +23,30 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             cursor: pointer;
             z-index: 800;
-            text-decoration: none;
+        }
+        /* Modal Styles copy-pasted from index.html */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+        .modal-actions {
+            margin-top: 20px;
+            text-align: right;
         }
     </style>
 </head>
@@ -39,12 +62,37 @@
         <div class="funnel-header">
             <h2>Leads Funnel</h2>
             <input type="text" id="lead-search-input" placeholder="Search leads...">
+            <label class="funnel-control">
+                <input type="checkbox" id="show-snoozed-checkbox"> Show Snoozed
+            </label>
         </div>
         <div id="kanban-board">
             <!-- Columns will be generated dynamically by leads.js -->
         </div>
-        <a href="/" class="fab" title="Add New Lead">+</a>
+        <button id="add-lead-fab" class="fab" title="Add New Lead">+</button>
     </main>
+
+    <!-- Add Lead Modal (copied from index.html) -->
+    <div id="add-modal" class="modal-backdrop" style="display:none;">
+        <div class="modal-content">
+            <h3>Add New Lead</h3>
+            <form id="add-form">
+                <input type="hidden" id="add-lat">
+                <input type="hidden" id="add-lng">
+                <label for="add-name">Name:</label>
+                <input type="text" id="add-name" required>
+                <label for="add-phone">Phone:</label>
+                <input type="tel" id="add-phone">
+                <label for="add-address">Address:</label>
+                <input type="text" id="add-address" required>
+                <div id="address-suggestions"></div>
+                 <div class="modal-actions">
+                    <button type="submit" class="btn-save">Save Lead</button>
+                    <button type="button" class="btn-cancel" id="cancel-add-modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script src="/static/js/leads.js"></script>
 </body>
 </html>
