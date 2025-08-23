@@ -147,20 +147,25 @@
         <div class="mt-4">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Activity Log</h5>
-                    <ul id="notes-list" class="list-group list-group-flush"></ul>
-                     <form id="add-note-form" class="mt-3">
+                    <h5 class="card-title">Add Note</h5>
+                    <form id="add-note-form">
                         <div class="mb-3">
                             <textarea id="note-text" class="form-control" rows="3" placeholder="Log a call, text, or meeting..."></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label for="note-attachment" class="form-label">Attachment</label>
-                            <input type="file" class="form-control" id="note-attachment" name="attachment">
+                        <div class="d-flex justify-content-between align-items-center">
+                             <div class="mb-3">
+                                <label for="note-attachment" class="form-label">Attachment</label>
+                                <input type="file" class="form-control" id="note-attachment" name="attachment">
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus-circle me-2"></i>Add Note
+                            </button>
                         </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus-circle me-2"></i>Add Note
-                        </button>
                     </form>
+                </div>
+                <div class="activity-log-list">
+                    <h5 class="card-title px-3">History</h5>
+                    <ul id="notes-list" class="list-group list-group-flush"></ul>
                 </div>
             </div>
         </div>

@@ -462,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.getElementById('add-lead-fab').addEventListener('click', () => {
+    document.getElementById('add-lead-fab-map').addEventListener('click', () => {
         // Open the modal at the current center of the map
         openAddModal(map.getCenter());
     });
