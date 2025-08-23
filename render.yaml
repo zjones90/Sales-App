@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: sales-app
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --workers 2 --threads 4 --timeout 120 -b 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: FLASK_ENV
+        value: production
+    # If you write user uploads to disk, make that folder persistent:
+    disk:
+      name: uploads
+      mountPath: /opt/render/project/src/uploads
+      sizeGB: 1
