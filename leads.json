@@ -57,7 +57,8 @@
         "notes": [],
         "status": "Presented",
         "first_name": "a",
-        "last_name": ""
+        "last_name": "",
+        "is_hot": false
     },
     "8": {
         "id": "8",
@@ -83,7 +84,8 @@
         "notes": [],
         "status": "Measured",
         "first_name": "Test",
-        "last_name": ""
+        "last_name": "",
+        "is_hot": false
     },
     "10": {
         "id": "10",
@@ -211,7 +213,8 @@
         "created_at": "2025-08-23T00:46:36.481965",
         "snooze_until": null,
         "first_name": "aa",
-        "last_name": ""
+        "last_name": "",
+        "is_hot": false
     },
     "16": {
         "id": "16",
@@ -226,7 +229,8 @@
         "notes": [],
         "status": "New",
         "created_at": "2025-08-23T01:11:27.593321",
-        "snooze_until": null
+        "snooze_until": null,
+        "is_hot": false
     },
     "17": {
         "id": "17",
@@ -241,7 +245,8 @@
         "notes": [],
         "status": "New",
         "created_at": "2025-08-23T01:12:20.276347",
-        "snooze_until": null
+        "snooze_until": null,
+        "is_hot": false
     },
     "18": {
         "id": "18",
@@ -256,7 +261,8 @@
         "notes": [],
         "status": "New",
         "created_at": "2025-08-23T01:32:12.788823",
-        "snooze_until": null
+        "snooze_until": null,
+        "is_hot": false
     },
     "19": {
         "id": "19",
