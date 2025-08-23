@@ -126,3 +126,45 @@ body {
 .toast.show {
     opacity: 1;
 }
+
+.address-suggestions {
+    position: absolute;
+    z-index: 1000;
+    width: calc(100% - 2rem);
+}
+
+.address-suggestions .list-group-item {
+    cursor: pointer;
+}
+
+.address-suggestions .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.activity-log-item, .task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.note-actions button, .task-actions button {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+}
+
+.note-actions button:hover, .task-actions button:hover {
+    color: #343a40;
+}
+
+#notes-list .list-group-item, #tasks-list .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+}
+
+#notes-list .list-group-item:first-child, #tasks-list .list-group-item:first-child {
+    border-top: 0;
+}
