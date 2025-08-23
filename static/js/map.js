@@ -208,11 +208,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const generatePopupContent = (lead) => {
         const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Unnamed Lead';
         const addressStr = lead.address?.full_address || 'No address provided';
+        const directionsHref = (lead.address && lead.address.lat && lead.address.lng)
+            ? `https://www.google.com/maps/dir/?api=1&destination=${lead.address.lat},${lead.address.lng}`
+            : '#';
+        const directionsLink = (lead.address && lead.address.lat && lead.address.lng)
+            ? `<a href="${directionsHref}" target="_blank" class="btn btn-sm btn-outline-primary ms-2" title="Get Directions"><i class="fas fa-directions"></i></a>`
+            : '';
+
         return `<b>${fullName}</b><br>
                 Status: ${lead.status || 'N/A'}<br>
                 ${addressStr}<br>
                 ${lead.phone || ''}
-                <br><a href="/leads/${lead.id}" class="fw-bold">View Details</a>`;
+                <br><a href="/leads/${lead.id}" class="fw-bold">View Details</a>
+                ${directionsLink}`;
     };
 
     const addLeadMarker = (lead) => {
