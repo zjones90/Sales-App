@@ -191,13 +191,25 @@ document.addEventListener('DOMContentLoaded', () => {
             column.querySelectorAll('.lead-card').forEach(card => card.remove());
         });
 
+        let firstResultColumn = null;
+
         filteredLeads.forEach(lead => {
             const column = document.querySelector(`.kanban-column[data-status="${lead.status}"]`);
             if (column) {
+                if (!firstResultColumn) {
+                    firstResultColumn = column;
+                }
                 const card = createLeadCard(lead);
                 column.appendChild(card);
             }
         });
+
+        if (firstResultColumn) {
+            if (firstResultColumn.classList.contains('collapsed')) {
+                firstResultColumn.classList.remove('collapsed');
+            }
+            firstResultColumn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+        }
     };
 
     const loadLeadsAndRender = async () => {
@@ -239,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
             column.dataset.status = status;
 
             const header = document.createElement('h3');
-            header.innerHTML = `${status} <span class="toggle-btn">‹</span>`;
+            header.innerHTML = `<span>${status}</span> <span class="toggle-btn">‹</span>`;
             header.addEventListener('click', () => {
                 column.classList.toggle('collapsed');
             });

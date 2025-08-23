@@ -236,9 +236,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reverse geocode the new location
         let newAddress = 'Address not found';
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${newLatLng.lat}&lon=${newLatLng.lng}`);
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${newLatLng.lat}&lon=${newLatLng.lng}`);
             const data = await response.json();
-            if (data.display_name) {
+            if (data.address) {
+                newAddress = formatAddress(data.address);
+            } else if (data.display_name) {
                 newAddress = data.display_name;
             }
         } catch (error) {
