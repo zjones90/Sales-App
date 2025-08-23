@@ -129,12 +129,14 @@ body {
     text-orientation: mixed;
     transform: rotate(180deg);
     white-space: nowrap;
-    height: auto; /* Fit content */
-    min-height: 250px; /* Ensure a minimum height */
-    justify-content: flex-end; /* Align title to the "bottom" (right side) */
+    height: 100%;
+    width: 55px;
+    justify-content: center;
     align-items: center;
-    padding: 1rem 0.5rem;
+    padding: 1rem 0;
     margin-bottom: 0;
+    border-bottom: none;
+    border-radius: .25rem;
 }
 
 .kanban-column.collapsed .column-title {

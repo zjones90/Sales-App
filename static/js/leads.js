@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const kanbanBoard = document.getElementById('kanban-board');
     const searchInput = document.getElementById('lead-search-input');
+    const hotLeadsFilterBtn = document.getElementById('hot-leads-filter-btn');
     const showSnoozedCheckbox = document.getElementById('show-snoozed-checkbox');
     const startDateFilter = document.getElementById('start-date-filter');
     const endDateFilter = document.getElementById('end-date-filter');
@@ -101,6 +102,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     confirmSnoozeBtn.addEventListener('click', confirmSnooze);
 
+    const toggleHotStatus = async (leadId) => {
+        const lead = allLeads.find(l => l.id === leadId);
+        if (!lead) return;
+
+        const newStatus = !lead.is_hot;
+        try {
+            const response = await fetch(`/api/leads/${leadId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_hot: newStatus }),
+            });
+            if (response.ok) {
+                showToast(`Lead marked as ${newStatus ? 'hot' : 'not hot'}.`);
+                await loadLeadsAndRender();
+            } else {
+                showToast('Failed to update hot status.', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating hot status:', error);
+            showToast('An error occurred while updating.', 'error');
+        }
+    };
+
     // --- Lead Card Creation ---
     const createLeadCard = (lead) => {
         const card = document.createElement('div');
@@ -128,6 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="lead-card-actions">
                     <a href="${viewOnMapHref}" class="btn btn-sm btn-outline-primary" ${viewOnMapDisabled} title="View on Map"><i class="fas fa-map-marker-alt"></i></a>
                     <button class="btn btn-sm btn-outline-secondary snooze-btn" title="Snooze Lead"><i class="fas fa-clock"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary hot-lead-btn" title="Toggle Hot Lead">
+                        <i class="fas fa-fire ${lead.is_hot ? 'text-danger' : ''}"></i>
+                    </button>
                 </div>
             </div>
         `;
@@ -141,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         card.querySelector('.snooze-btn').addEventListener('click', () => handleSnooze(lead.id));
+        card.querySelector('.hot-lead-btn').addEventListener('click', () => toggleHotStatus(lead.id));
         card.addEventListener('dragstart', handleDragStart);
         card.addEventListener('dragend', handleDragEnd);
 
@@ -150,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Rendering ---
     const renderLeads = () => {
         const query = searchInput.value.toLowerCase();
+        const showHotOnly = hotLeadsFilterBtn.classList.contains('active');
         const showSnoozed = showSnoozedCheckbox.checked;
         const startDate = startDateFilter.value;
         const endDate = endDateFilter.value;
@@ -160,6 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const searchMatch = (fullName.includes(query) ||
                                  lead.phone?.toLowerCase().includes(query) ||
                                  lead.address?.full_address?.toLowerCase().includes(query));
+
+            const hotMatch = !showHotOnly || lead.is_hot;
 
             const isSnoozed = lead.snooze_until && new Date(lead.snooze_until) > now;
             const snoozeMatch = showSnoozed || !isSnoozed;
@@ -182,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dateMatch = false; // Exclude leads without a created_at date if filtering by date
             }
 
-            return searchMatch && snoozeMatch && dateMatch;
+            return searchMatch && hotMatch && snoozeMatch && dateMatch;
         });
 
         // Clear all cards and update counts
@@ -339,6 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
             first_name: document.getElementById('add-first-name').value,
             last_name: document.getElementById('add-last-name').value,
             phone: document.getElementById('add-phone').value,
+            source: document.getElementById('add-lead-source').value,
             address: {
                 lat: parseFloat(document.getElementById('add-lat').value),
                 lng: parseFloat(document.getElementById('add-lng').value),
@@ -381,6 +413,10 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadLeadsAndRender();
 
             // Event Listeners
+            hotLeadsFilterBtn.addEventListener('click', () => {
+                hotLeadsFilterBtn.classList.toggle('active');
+                renderLeads();
+            });
             searchInput.addEventListener('input', renderLeads);
             showSnoozedCheckbox.addEventListener('change', renderLeads);
             startDateFilter.addEventListener('change', renderLeads);

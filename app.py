@@ -73,7 +73,9 @@ def api_create_lead():
         'notes': [],
         'status': 'New',
         'created_at': datetime.utcnow().isoformat(),
-        'snooze_until': None
+        'snooze_until': None,
+        'is_hot': False,
+        'source': data.get('source', 'Other')
     }
     # The address object should contain lat, lng, and full_address
     if 'address' in data and 'full_address' in data['address']:
