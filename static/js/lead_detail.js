@@ -482,8 +482,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span>${task.title}</span>
                 </div>
                 <div class="task-actions">
-                    <button class="edit-task-btn btn btn-sm btn-link text-secondary" title="Edit Task"><i class="fas fa-pencil-alt"></i></button>
-                    <button class="delete-task-btn btn btn-sm btn-link text-danger" title="Delete Task"><i class="fas fa-trash-alt"></i></button>
+                    <button class="edit-task-btn btn btn-sm task-action-btn" title="Edit Task"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="delete-task-btn btn btn-sm task-action-btn" title="Delete Task"><i class="fas fa-trash-alt"></i></button>
                 </div>
             `;
             tasksListEl.appendChild(li);

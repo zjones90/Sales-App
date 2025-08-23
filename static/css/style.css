@@ -327,14 +327,6 @@ body {
     font-weight: bold;
 }
 
-.task-actions button {
-    opacity: 0.5;
-}
-
-.task-item:hover .task-actions button {
-    opacity: 1;
-}
-
 .task-list-item {
     display: flex;
     justify-content: space-between;
@@ -342,12 +334,32 @@ body {
 }
 
 .task-list-item .task-actions {
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.2s ease-in-out;
+    display: flex;
+    gap: 0.5rem;
 }
 
-.task-list-item:hover .task-actions {
-    opacity: 1;
+.task-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    color: #333;
+}
+
+.task-action-btn:hover {
+    background-color: #e0e0e0;
+    border-color: #999;
+}
+
+.task-action-btn .fa-trash-alt {
+    color: #dc3545;
 }
 
 .card-footer {
