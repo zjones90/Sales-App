@@ -28,9 +28,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     };
 
+    const STATUS_COLORS = {
+        "New": "#007bff", // Blue
+        "Contacted": "#ffc107", // Yellow
+        "Measured": "#fd7e14", // Orange
+        "Presented": "#20c997", // Teal
+        "Signed": "#28a745", // Green
+        "Dug": "#6f42c1", // Indigo
+        "Completed": "#17a2b8", // Cyan
+        "Lost": "#dc3545", // Red
+        "Default": "#6c757d" // Grey for any other status
+    };
+
+    const getIconForStatus = (status) => {
+        const color = STATUS_COLORS[status] || STATUS_COLORS['Default'];
+        // A simple SVG for a pin. Using a divIcon to embed custom HTML.
+        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" style="transform: translateY(-4px);">
+            <path fill="${color}" stroke="black" stroke-width="0.5" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
+            <circle cx="12" cy="9" r="2.5" fill="white"></circle>
+        </svg>`;
+
+        return L.divIcon({
+            html: iconHtml,
+            className: 'custom-div-icon',
+            iconSize: [30, 42],
+            iconAnchor: [15, 42],
+            popupAnchor: [0, -42]
+        });
+    };
+
     // --- Map Initialization ---
     const map = L.map('map').setView([39.8283, -98.5795], 4);
-    let tempMarker = null; // To hold temporary markers
+    let tempMarker = null; // To hold temporary markers for search
+    let userMarker = null; // To hold the user's location marker
+    let isFirstLocation = true; // To track if we should center the map
+
+    const userLocationIcon = L.divIcon({
+        html: `<div class="user-location-marker"></div>`,
+        className: 'custom-div-icon',
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+    });
 
     // --- Tile Layers & Layer Control ---
     const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -121,16 +159,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const centerOnUser = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const { latitude, longitude } = position.coords;
-                map.setView([latitude, longitude], 17); // Zoom in a bit closer
-                placeTemporaryMarker(latitude, longitude);
-            }, () => {
-                showToast('Could not get your location.', 'error');
-            });
+        if (userMarker) {
+            map.setView(userMarker.getLatLng(), 17);
         } else {
-            showToast('Geolocation is not supported by this browser.', 'error');
+            // If user location is not available yet, show a message.
+            // The location watcher will center the map once it gets a lock.
+            showToast('Getting your location...', 'info');
         }
     };
 
@@ -173,15 +207,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const addLeadMarker = (lead) => {
         if (lead.address && lead.address.lat && lead.address.lng) {
-            const marker = L.marker([lead.address.lat, lead.address.lng]);
+            const marker = L.marker([lead.address.lat, lead.address.lng], {
+                icon: getIconForStatus(lead.status),
+                draggable: true // Make the marker draggable
+            });
             marker.bindPopup(generatePopupContent(lead));
             marker.leadData = lead; // Store full lead data on the marker
 
-            // The 'click' event is now handled by the popup, which opens by default.
-            // The link to the lead detail page is inside the popup content.
+            // Add dragend event listener
+            marker.on('dragend', handleMarkerDragEnd);
 
             leadMarkers.push(marker);
             marker.addTo(map);
+        }
+    };
+
+    const handleMarkerDragEnd = async (e) => {
+        const marker = e.target;
+        const lead = marker.leadData;
+        const newLatLng = marker.getLatLng();
+
+        // Show a temporary message in the popup
+        marker.setPopupContent('Updating address...').openPopup();
+
+        // 1. Reverse geocode the new location
+        let newAddress = 'Address not found';
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${newLatLng.lat}&lon=${newLatLng.lng}`);
+            const data = await response.json();
+            if (data.display_name) {
+                newAddress = data.display_name;
+            }
+        } catch (error) {
+            console.error('Reverse geocoding failed:', error);
+        }
+
+        // 2. Prepare the data for the API
+        const updatedData = {
+            address: {
+                lat: newLatLng.lat,
+                lng: newLatLng.lng,
+                full_address: newAddress
+            }
+        };
+
+        // 3. Send the update to the server
+        try {
+            const response = await fetch(`/api/leads/${lead.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+
+            if (response.ok) {
+                const updatedLead = await response.json();
+                // Update local data stores
+                allLeads[lead.id] = updatedLead;
+                marker.leadData = updatedLead;
+                // Update the popup with the final, correct content
+                marker.setPopupContent(generatePopupContent(updatedLead));
+                showToast('Lead location updated!');
+            } else {
+                // Revert marker position on failure
+                marker.setLatLng([lead.address.lat, lead.address.lng]);
+                marker.setPopupContent(generatePopupContent(lead)); // Restore original popup
+                showToast('Failed to update lead location.', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating lead location:', error);
+            marker.setLatLng([lead.address.lat, lead.address.lng]);
+            marker.setPopupContent(generatePopupContent(lead)); // Restore original popup
+            showToast('An error occurred.', 'error');
         }
     };
 
@@ -331,6 +427,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // It could be used for other things, so we'll leave it for now but it's not strictly necessary.
     });
 
+    document.getElementById('add-lead-fab').addEventListener('click', () => {
+        // Open the modal at the current center of the map
+        openAddModal(map.getCenter());
+    });
 
     map.on('click', (e) => {
         // Prevent opening the add modal if a marker (real or temporary) was clicked
@@ -422,8 +522,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const markerToUpdate = leadMarkers.find(m => m.leadData.id === leadId);
                 if (markerToUpdate) {
                     markerToUpdate.leadData = updatedLead;
-                    // Update popup content and marker position
+                    // Update popup content, marker position, and icon
                     markerToUpdate.setPopupContent(generatePopupContent(updatedLead));
+                    markerToUpdate.setIcon(getIconForStatus(updatedLead.status)); // Update icon
                     if (updatedLead.address.lat && updatedLead.address.lng) {
                         markerToUpdate.setLatLng([updatedLead.address.lat, updatedLead.address.lng]);
                     }
@@ -474,12 +575,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const startLocationWatcher = () => {
+        if (!navigator.geolocation) {
+            showToast('Geolocation is not supported by this browser.', 'error');
+            return;
+        }
+
+        navigator.geolocation.watchPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                const latLng = [latitude, longitude];
+
+                if (userMarker) {
+                    userMarker.setLatLng(latLng);
+                } else {
+                    userMarker = L.marker(latLng, { icon: userLocationIcon }).addTo(map);
+                }
+
+                // Only center the map on the first location update
+                if (isFirstLocation) {
+                    map.setView(latLng, 17);
+                    isFirstLocation = false;
+                }
+            },
+            () => {
+                showToast('Could not get your location.', 'error');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    };
+
     // --- Main App Initialization ---
     const initializeMap = async () => {
         try {
-            // Center on user first
-            centerOnUser();
-
             const response = await fetch('/api/statuses');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -487,6 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const statuses = await response.json();
             buildControlsFromStatuses(statuses);
             await loadLeads();
+            startLocationWatcher(); // Start tracking user's location
         } catch (error) {
             console.error('Error initializing map:', error);
             // Can't build a button, so just show error text.
