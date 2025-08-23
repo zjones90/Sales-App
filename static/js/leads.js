@@ -366,22 +366,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleAddFormSubmit = async (e) => {
         e.preventDefault();
+        const latVal = document.getElementById('add-lat').value;
+        const lngVal = document.getElementById('add-lng').value;
+        const lat = latVal ? parseFloat(latVal) : null;
+        const lng = lngVal ? parseFloat(lngVal) : null;
+
         const newLead = {
             first_name: document.getElementById('add-first-name').value,
             last_name: document.getElementById('add-last-name').value,
             phone: document.getElementById('add-phone').value,
             source: document.getElementById('add-lead-source').value,
             address: {
-                lat: parseFloat(document.getElementById('add-lat').value),
-                lng: parseFloat(document.getElementById('add-lng').value),
+                lat: lat,
+                lng: lng,
                 full_address: document.getElementById('add-address').value
             }
         };
 
-        if (!newLead.address.lat || !newLead.address.lng) {
-            showToast('Please select a valid address from the suggestions.', 'error');
-            return;
-        }
+        // The check requiring a selected address has been removed.
+        // Now, the lead can be created with just the text address.
 
         try {
             const response = await fetch('/api/leads', {

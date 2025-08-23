@@ -1,5 +1,15 @@
 body {
     background-color: #f8f9fa;
+    /* Add padding to the top of the body to offset the fixed navbar */
+    padding-top: 56px; /* Adjust this value to match your navbar's height */
+}
+
+/* Make the navbar sticky */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1030; /* Ensure it's above other content */
 }
 
 #map {
@@ -44,20 +54,23 @@ body {
     animation: pulsate 2s infinite;
 }
 
-#custom-controls-container {
+#map-controls-overlay {
     position: absolute;
-    top: 65px;
+    top: 70px; /* Adjust based on navbar height + margin */
     left: 10px;
     z-index: 400;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#custom-controls-container {
     display: flex;
     gap: 5px;
 }
 
 #filter-control-container {
-    position: absolute;
-    top: 65px;
-    right: 10px;
-    z-index: 400;
+    /* Now a flex item, no special positioning needed */
 }
 
 #filter-panel {
@@ -168,17 +181,66 @@ body {
     white-space: normal; /* Override any white-space settings */
 }
 
+/* --- Mobile Navigation Bar --- */
+.mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #fff;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    z-index: 1020; /* Below navbar, above other content */
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d; /* Muted grey */
+    text-decoration: none;
+    font-size: 0.75rem;
+    flex-grow: 1;
+    padding: 5px 0;
+    transition: color 0.2s ease-in-out;
+}
+
+.mobile-nav-item i {
+    font-size: 1.5rem;
+    margin-bottom: 2px;
+}
+
+.mobile-nav-item.active {
+    color: #0d6efd; /* Bootstrap primary blue */
+}
+
+
 @media (max-width: 991.98px) {
-    #custom-controls-container,
-    #filter-control-container {
-        /* Move controls down to avoid overlapping the expanded navbar */
-        top: 125px;
+    /* Add padding to the bottom of the body to offset the mobile nav */
+    body {
+        padding-bottom: 60px; /* Match mobile-nav height */
+    }
+
+    #map {
+        /* Adjust map height to account for both navbar and mobile nav */
+        height: calc(100vh - 56px - 60px);
+    }
+
+    .fab {
+        /* Move the FAB up to be above the mobile nav */
+        bottom: 80px;
     }
 
     #filter-panel {
         /* Adjust filter panel to not go off-screen */
-        right: 0;
-        left: auto;
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        width: auto;
     }
 }
 
