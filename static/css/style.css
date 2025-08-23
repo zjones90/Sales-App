@@ -125,42 +125,40 @@ body {
 }
 
 .kanban-column.collapsed h3 {
-    /* Reset all the vertical text properties */
-    writing-mode: initial;
-    text-orientation: initial;
-    transform: none;
-    white-space: normal; /* Allow text to wrap if needed */
-
-    /* Layout */
     display: flex;
-    flex-direction: column; /* Stack count and title vertically */
-    justify-content: center; /* Center content vertically inside the header */
-    align-items: center; /* Center content horizontally */
-
-    /* Sizing and Spacing */
-    height: auto; /* Auto height based on content */
-    width: 100%; /* Take full width of the collapsed column */
-    padding: 0.5rem 0.25rem; /* Adjust padding for smaller space */
+    flex-direction: column;
+    justify-content: flex-start; /* Align count to the top */
+    align-items: center;
+    /* The column will stretch to the height of the tallest column.
+       This h3 should fill the column. */
+    height: 100%;
+    width: 100%;
+    padding: 1rem 0.25rem;
     margin: 0;
-
-    /* Borders and Background */
-    border-bottom: 1px solid #dee2e6;
-    border-radius: .25rem .25rem 0 0;
+    border-bottom: none;
+    border-radius: .25rem;
+    box-sizing: border-box; /* Ensure padding is included in height */
 }
 
 .kanban-column.collapsed .column-title {
-    transform: none; /* Reset transform */
-    margin-top: 0.25rem; /* Add space above title */
-    font-size: 0.75rem; /* Make font smaller */
-    line-height: 1;
-    text-align: center;
+    /* Rotate the text */
+    transform: rotate(-90deg);
+    white-space: nowrap;
+
+    /* Keep original font style */
+    font-size: 1.1rem;
+    font-weight: 600;
+
+    /* Center the rotated text block */
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .kanban-column.collapsed .lead-count {
-    transform: none; /* Reset transform */
-    margin-bottom: 0; /* Remove bottom margin */
-    margin-left: auto;
-    margin-right: auto;
+    margin-bottom: 1.5rem; /* Space between count and title block */
+    flex-shrink: 0; /* Prevent count from shrinking */
 }
 
 .kanban-column.collapsed .lead-card {
